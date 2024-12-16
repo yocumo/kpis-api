@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    container_name: overtime_api
+    ports:
+      - "8081:8001"
+    environment:
+      - DATABASE_URL=postgresql://admeiasa:eiasa.adm2024@db:5432/overtime_db
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    container_name: overtime_db
+    environment:
+      - POSTGRES_USER=admeiasa
+      - POSTGRES_PASSWORD=eiasa.adm2024
+      - POSTGRES_DB=overtime_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+volumes:
+  postgres_data:

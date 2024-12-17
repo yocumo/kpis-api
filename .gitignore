@@ -1,2 +1,3 @@
-# /app.log
+/app.log
 __pycache__
+/task_import_errors

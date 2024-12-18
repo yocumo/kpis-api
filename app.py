@@ -55,4 +55,4 @@ app.include_router(kpi)
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("app2:app", host="0.0.0.0", port=8002, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

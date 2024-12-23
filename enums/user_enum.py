@@ -23,3 +23,6 @@ class TypeIHistoryEnum(Enum):
     calculated = "calculated"
     registered = "registered"
     
+    
+    
+    

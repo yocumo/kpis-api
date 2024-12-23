@@ -6,6 +6,7 @@ from routes.task import task
 from routes.exception import exceptione
 from routes.estimateds import estimated
 from routes.historyindicator import kpi
+from routes.dashboard import dashboard
 
 from loguru import logger
 import sys
@@ -49,10 +50,11 @@ app.include_router(task)
 app.include_router(estimated)
 app.include_router(exceptione)
 app.include_router(kpi)
+app.include_router(dashboard)
 
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8002, reload=True)

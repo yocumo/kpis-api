@@ -7,6 +7,7 @@ DECLARE
     compliance_result varchar;
     confirmation_waiting_interval interval;
     confirmation_waiting_minutes integer;
+    confirmation_waiting_time interval;
     total_time_interval interval;
     total_time_minutes integer;
 	day_week integer;
@@ -30,6 +31,7 @@ DECLARE
     root_cause_ant_result varchar;
     esi_result varchar;
     days_betweenn numeric;
+    catv_count integer;
 BEGIN
     -- Obtenemos los minutos para actividad PROGRAMADA
     SELECT extract(hour from minut) * 60 + extract(minute from minut)
@@ -45,9 +47,13 @@ BEGIN
     
     --TODO:: Aplicamos la lógica del IF de Excel para expected_current_date_time
     IF NEW.request_activity = 'PROGRAMADA' AND NEW.status = 'Completada' THEN
-        calculated_time := date_trunc('minute', NEW.scheduled_time AT TIME ZONE 'UTC' - (programada_minutes || ' minutes')::interval);
+        calculated_time := NEW.scheduled_time AT TIME ZONE 'UTC' - 
+                        (programada_minutes * interval '1 minute');
+        calculated_time := date_trunc('minute', calculated_time);
     ELSIF NEW.request_activity = 'INMEDIATA' AND NEW.status = 'Completada' THEN
-        calculated_time := date_trunc('minute', NEW.date_delivery_time AT TIME ZONE 'UTC' + (inmediata_minutes || ' minutes')::interval);
+        calculated_time := NEW.date_delivery_time AT TIME ZONE 'UTC' + 
+                        (inmediata_minutes * interval '1 minute');
+        calculated_time := date_trunc('minute', calculated_time);
     ELSE
         calculated_time := NULL;
     END IF;
@@ -65,12 +71,11 @@ BEGIN
     
     --TODO:: Calcular TIEMPO ESPERA CONFIRMACIÓN
     IF NEW.confirmation_time IS NOT NULL AND NEW.final_time IS NOT NULL 
-       AND NEW.confirmation_time > NEW.final_time THEN
+        AND NEW.confirmation_time > NEW.final_time THEN
         confirmation_waiting_interval := NEW.confirmation_time - NEW.final_time;
-        confirmation_waiting_minutes := EXTRACT(HOUR FROM confirmation_waiting_interval) * 60 + 
-                                        EXTRACT(MINUTE FROM confirmation_waiting_interval);
+        confirmation_waiting_minutes := EXTRACT(EPOCH FROM confirmation_waiting_interval)::integer;
     ELSE
-        confirmation_waiting_minutes := 0;
+        confirmation_waiting_time := 0;
     END IF;
     ---TODO:: Calcular Tiempo Total
     IF NEW.status <> 'Completada' THEN
@@ -178,6 +183,20 @@ BEGIN
         END IF;
     END IF;
     
+    --- TODO:: CATV_TEST
+    IF NEW.status <> 'Completada' THEN
+       catv_count := NULL; 
+    ELSIF (SELECT COUNT(*) FROM exceptions_cavid WHERE cavid = NEW.cav_id LIMIT 1) > 0 AND 
+    (NEW.attributable = '0' OR NEW.attributable = 'CLIENTE') THEN
+       catv_count := 0; 
+        ELSE
+            SELECT COUNT(*)
+            INTO catv_count
+            FROM tasks
+            WHERE cav_id = NEW.cav_id 
+            AND status = NEW.status 
+            AND attributable = NEW.attributable;
+    END IF;
     -- TODO::Cálculo de ESI_STAFF
     IF NEW.status <> 'Completada' THEN
         esi_staff_result := NULL;
@@ -280,8 +299,6 @@ BEGIN
         IF NEW.confirmation_time IS NOT NULL THEN
             days_between := EXTRACT(EPOCH FROM (NEW.confirmation_time - vr_date_result)) / (24 * 60 * 60);
             
-            -- Verificar si days_between es menor o igual a 30 y cumple las demás condiciones
-            -- Nota: Asumiendo que catv_test > 0 significa prueba exitosa y que ESI será implementado después
             IF days_between <= 30 AND 
                EXISTS (
                    SELECT 1 
@@ -298,6 +315,8 @@ BEGIN
             vr_result := '';
         END IF;
     END IF;
+     -- Convertir el tiempo total a horas para la comparación
+    total_time_hours := EXTRACT(EPOCH FROM total_time_interval) / 3600;  
      ---TODO:: TS
     IF NEW.resolutioncategory_2ps IN ('VISITA FALLIDA', 'VISITA CANCELADA') THEN
         ts_status := '';
@@ -319,8 +338,8 @@ BEGIN
 			 FROM exceptions_category 
 			 WHERE category_type = NEW.operational_category), 
 			'00:00:00'::time
-			)) INTO max_hours_for_category;
-            total_time_hours := total_time_minutes / 60.0;
+			)) / 3600 INTO max_hours_for_category;
+            -- total_time_hours := total_time_minutes / 60.0;
             IF total_time_hours <= max_hours_for_category THEN
                 ts_status := 'CUMPLE';
             ELSE
@@ -398,7 +417,8 @@ BEGIN
         esi_catv_test,
         esi_staff,
         root_cause_ant,
-        esi
+        esi,
+        catv_test
     )
     VALUES (
         NEW.id,
@@ -407,7 +427,7 @@ BEGIN
             ELSE NULL 
         END,
         compliance_result,
-        COALESCE(to_char((confirmation_waiting_minutes * interval '1 minute'), 'HH24:MI'), '00:00')::time,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
         COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
 		day_week,
         dead_time,
@@ -424,7 +444,8 @@ BEGIN
         esi_catv_test_result,
         esi_staff_result,
         root_cause_ant_result,
-        esi_result
+        esi_result,
+        catv_count
     )
     ON CONFLICT (task_id) DO UPDATE
     SET 
@@ -448,6 +469,7 @@ BEGIN
         esi_staff = EXCLUDED.esi_staff,
         root_cause_ant = EXCLUDED.root_cause_ant,
         esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
         updated_at = CURRENT_TIMESTAMP;
     
     RETURN NEW;

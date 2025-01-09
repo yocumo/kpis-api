@@ -172,3 +172,4 @@ def import_from_excel(form: TaskImport, db: Session = Depends(get_db)):
             status_code=400,
             detail=f"Error global al importar los datos: {str(global_error)}",
         )
+

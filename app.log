@@ -1,10 +1,2 @@
-2024-12-23 13:23:33.415 | INFO     | routes.user:create_user:59 - Usuario creado: <models.user.User object at 0x7b9067941190>
-2024-12-25 22:42:30.778 | ERROR    | routes.task:import_from_excel:170 - [Errno 5] Input/output error
-2024-12-25 22:42:51.640 | ERROR    | routes.task:import_from_excel:170 - [Errno 5] Input/output error
-2024-12-25 22:43:26.522 | ERROR    | routes.task:import_from_excel:170 - [Errno 5] Input/output error
-2024-12-25 22:43:54.533 | ERROR    | routes.task:import_from_excel:170 - [Errno 5] Input/output error
-2025-01-09 00:03:14.609 | ERROR    | routes.task:import_from_excel:170 - [Errno 5] Input/output error
-2025-01-09 00:04:16.613 | ERROR    | routes.task:import_from_excel:170 - [Errno 5] Input/output error
-2025-01-09 00:05:25.991 | ERROR    | routes.task:import_from_excel:170 - [Errno 5] Input/output error
-2025-01-09 00:09:08.113 | ERROR    | routes.task:import_from_excel:170 - [Errno 5] Input/output error
-2025-01-09 00:11:41.313 | ERROR    | routes.task:import_from_excel:170 - [Errno 5] Input/output error
+.
+

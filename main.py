@@ -7,6 +7,8 @@ from routes.exception import exceptione
 from routes.estimateds import estimated
 from routes.historyindicator import kpi
 from routes.dashboard import dashboard
+from routes.taskHome import task_home
+
 
 from loguru import logger
 import sys
@@ -51,6 +53,9 @@ app.include_router(estimated)
 app.include_router(exceptione)
 app.include_router(kpi)
 app.include_router(dashboard)
+
+# TODO: Task-Home
+app.include_router(task_home)
 
 
 

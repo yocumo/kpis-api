@@ -1,0 +1,1222 @@
+2024-12-31 10:12:01.942 | ERROR    | routes.dashboard:get_arrival_time:238 - Error al obtener franjas horarias: ORDER BY expression expected, got 1.
+2024-12-31 10:12:06.445 | ERROR    | routes.dashboard:get_arrival_time:238 - Error al obtener franjas horarias: ORDER BY expression expected, got 1.
+2024-12-31 10:12:28.176 | ERROR    | routes.dashboard:get_arrival_time:238 - Error al obtener franjas horarias: ORDER BY expression expected, got 1.
+2024-12-31 10:18:59.559 | ERROR    | routes.dashboard:get_arrival_time:207 - Error al obtener franjas horarias: ORDER BY expression expected, got 1.
+2024-12-31 10:21:27.581 | ERROR    | routes.dashboard:get_arrival_time:207 - Error al obtener franjas horarias: ORDER BY expression expected, got 1.
+2025-01-09 00:21:19.619 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.DatetimeFieldOverflow) valor de hora/fecha fuera de rango: «43:22:58»
+CONTEXT:  sentencia SQL: «INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP»
+función PL/pgSQL calculate_estimated_times() en la línea 398 en sentencia SQL
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'ARISTIZABAL GONZALEZ LAURA CAMILA', 'code': 'TAS000000630976', 'client': 'ETB', 'description': "1. Direccion:CENTRAL FONTIBON  CARRERA 99 # 25  17    \r\n 2. CAV/ID:CAV2000011528 \r\n 3. Categorizacion Operacional:DEGRADACION \r\n 4. Descripcion ... (1382 characters truncated) ... 86 L-V 7 am - 4 pm\r\n\r\nNombre del especialista:  7x24\r\nCelular del especialista:  3058230711 - WS 3058230648 ASC - 3058224307 SGS (Por Whatsapp)", 'address': 'CENTRAL FONTIBON  CARRERA 99 # 25  17', 'cav_id': 'CAV2000011528', 'operational_category': 'DEGRADACION', 'request_activity': 'INMEDIATA', 'assigned_staff': 'MONTAÑEZ ALVIS JHOAN SEBASTIAN', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2024, 12, 24, 13, 38, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2024, 12, 24, 14, 10, 48, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2024, 12, 24, 17, 0, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2024, 12, 24, 15, 56, 15, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2024, 12, 24, 16, 31, 4, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2024, 12, 24, 18, 19, 8, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2024, 12, 26, 13, 42, 6, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(0, 20), 'execution_dead_time': datetime.time(0, 50), 'observation_dead_time': 'Espera por ingreso y apertura a rack', 'service_type': None, 'staff_dni': '1006087213', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 00:21:43.902 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.DatetimeFieldOverflow) valor de hora/fecha fuera de rango: «43:22:58»
+CONTEXT:  sentencia SQL: «INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP»
+función PL/pgSQL calculate_estimated_times() en la línea 398 en sentencia SQL
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'ARISTIZABAL GONZALEZ LAURA CAMILA', 'code': 'TAS000000630976', 'client': 'ETB', 'description': "1. Direccion:CENTRAL FONTIBON  CARRERA 99 # 25  17    \r\n 2. CAV/ID:CAV2000011528 \r\n 3. Categorizacion Operacional:DEGRADACION \r\n 4. Descripcion ... (1382 characters truncated) ... 86 L-V 7 am - 4 pm\r\n\r\nNombre del especialista:  7x24\r\nCelular del especialista:  3058230711 - WS 3058230648 ASC - 3058224307 SGS (Por Whatsapp)", 'address': 'CENTRAL FONTIBON  CARRERA 99 # 25  17', 'cav_id': 'CAV2000011528', 'operational_category': 'DEGRADACION', 'request_activity': 'INMEDIATA', 'assigned_staff': 'MONTAÑEZ ALVIS JHOAN SEBASTIAN', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2024, 12, 24, 13, 38, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2024, 12, 24, 14, 10, 48, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2024, 12, 24, 17, 0, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2024, 12, 24, 15, 56, 15, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2024, 12, 24, 16, 31, 4, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2024, 12, 24, 18, 19, 8, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2024, 12, 26, 13, 42, 6, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(0, 20), 'execution_dead_time': datetime.time(0, 50), 'observation_dead_time': 'Espera por ingreso y apertura a rack', 'service_type': None, 'staff_dni': '1006087213', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 00:24:44.606 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.DatetimeFieldOverflow) valor de hora/fecha fuera de rango: «43:22:58»
+CONTEXT:  sentencia SQL: «INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP»
+función PL/pgSQL calculate_estimated_times() en la línea 398 en sentencia SQL
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'ARISTIZABAL GONZALEZ LAURA CAMILA', 'code': 'TAS000000630976', 'client': 'ETB', 'description': "1. Direccion:CENTRAL FONTIBON  CARRERA 99 # 25  17    \r\n 2. CAV/ID:CAV2000011528 \r\n 3. Categorizacion Operacional:DEGRADACION \r\n 4. Descripcion ... (1382 characters truncated) ... 86 L-V 7 am - 4 pm\r\n\r\nNombre del especialista:  7x24\r\nCelular del especialista:  3058230711 - WS 3058230648 ASC - 3058224307 SGS (Por Whatsapp)", 'address': 'CENTRAL FONTIBON  CARRERA 99 # 25  17', 'cav_id': 'CAV2000011528', 'operational_category': 'DEGRADACION', 'request_activity': 'INMEDIATA', 'assigned_staff': 'MONTAÑEZ ALVIS JHOAN SEBASTIAN', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2024, 12, 24, 13, 38, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2024, 12, 24, 14, 10, 48, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2024, 12, 24, 17, 0, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2024, 12, 24, 15, 56, 15, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2024, 12, 24, 16, 31, 4, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2024, 12, 24, 18, 19, 8, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2024, 12, 26, 13, 42, 6, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(0, 20), 'execution_dead_time': datetime.time(0, 50), 'observation_dead_time': 'Espera por ingreso y apertura a rack', 'service_type': None, 'staff_dni': '1006087213', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 00:36:35.888 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.DatetimeFieldOverflow) valor de hora/fecha fuera de rango: «43:22:58»
+CONTEXT:  sentencia SQL: «INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP»
+función PL/pgSQL calculate_estimated_times() en la línea 398 en sentencia SQL
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'ARISTIZABAL GONZALEZ LAURA CAMILA', 'code': 'TAS000000630976', 'client': 'ETB', 'description': "1. Direccion:CENTRAL FONTIBON  CARRERA 99 # 25  17    \r\n 2. CAV/ID:CAV2000011528 \r\n 3. Categorizacion Operacional:DEGRADACION \r\n 4. Descripcion ... (1382 characters truncated) ... 86 L-V 7 am - 4 pm\r\n\r\nNombre del especialista:  7x24\r\nCelular del especialista:  3058230711 - WS 3058230648 ASC - 3058224307 SGS (Por Whatsapp)", 'address': 'CENTRAL FONTIBON  CARRERA 99 # 25  17', 'cav_id': 'CAV2000011528', 'operational_category': 'DEGRADACION', 'request_activity': 'INMEDIATA', 'assigned_staff': 'MONTAÑEZ ALVIS JHOAN SEBASTIAN', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2024, 12, 24, 13, 38, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2024, 12, 24, 14, 10, 48, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2024, 12, 24, 17, 0, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2024, 12, 24, 15, 56, 15, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2024, 12, 24, 16, 31, 4, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2024, 12, 24, 18, 19, 8, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2024, 12, 26, 13, 42, 6, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(0, 20), 'execution_dead_time': datetime.time(0, 50), 'observation_dead_time': 'Espera por ingreso y apertura a rack', 'service_type': None, 'staff_dni': '1006087213', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 00:37:05.016 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.DatetimeFieldOverflow) valor de hora/fecha fuera de rango: «43:22:58»
+CONTEXT:  sentencia SQL: «INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP»
+función PL/pgSQL calculate_estimated_times() en la línea 398 en sentencia SQL
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'ARISTIZABAL GONZALEZ LAURA CAMILA', 'code': 'TAS000000630976', 'client': 'ETB', 'description': "1. Direccion:CENTRAL FONTIBON  CARRERA 99 # 25  17    \r\n 2. CAV/ID:CAV2000011528 \r\n 3. Categorizacion Operacional:DEGRADACION \r\n 4. Descripcion ... (1382 characters truncated) ... 86 L-V 7 am - 4 pm\r\n\r\nNombre del especialista:  7x24\r\nCelular del especialista:  3058230711 - WS 3058230648 ASC - 3058224307 SGS (Por Whatsapp)", 'address': 'CENTRAL FONTIBON  CARRERA 99 # 25  17', 'cav_id': 'CAV2000011528', 'operational_category': 'DEGRADACION', 'request_activity': 'INMEDIATA', 'assigned_staff': 'MONTAÑEZ ALVIS JHOAN SEBASTIAN', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2024, 12, 24, 13, 38, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2024, 12, 24, 14, 10, 48, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2024, 12, 24, 17, 0, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2024, 12, 24, 15, 56, 15, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2024, 12, 24, 16, 31, 4, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2024, 12, 24, 18, 19, 8, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2024, 12, 26, 13, 42, 6, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(0, 20), 'execution_dead_time': datetime.time(0, 50), 'observation_dead_time': 'Espera por ingreso y apertura a rack', 'service_type': None, 'staff_dni': '1006087213', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 00:39:36.516 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.DatetimeFieldOverflow) valor de hora/fecha fuera de rango: «43:22:58»
+CONTEXT:  sentencia SQL: «INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP»
+función PL/pgSQL calculate_estimated_times() en la línea 398 en sentencia SQL
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'ARISTIZABAL GONZALEZ LAURA CAMILA', 'code': 'TAS000000630976', 'client': 'ETB', 'description': "1. Direccion:CENTRAL FONTIBON  CARRERA 99 # 25  17    \r\n 2. CAV/ID:CAV2000011528 \r\n 3. Categorizacion Operacional:DEGRADACION \r\n 4. Descripcion ... (1382 characters truncated) ... 86 L-V 7 am - 4 pm\r\n\r\nNombre del especialista:  7x24\r\nCelular del especialista:  3058230711 - WS 3058230648 ASC - 3058224307 SGS (Por Whatsapp)", 'address': 'CENTRAL FONTIBON  CARRERA 99 # 25  17', 'cav_id': 'CAV2000011528', 'operational_category': 'DEGRADACION', 'request_activity': 'INMEDIATA', 'assigned_staff': 'MONTAÑEZ ALVIS JHOAN SEBASTIAN', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2024, 12, 24, 13, 38, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2024, 12, 24, 14, 10, 48, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2024, 12, 24, 17, 0, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2024, 12, 24, 15, 56, 15, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2024, 12, 24, 16, 31, 4, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2024, 12, 24, 18, 19, 8, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2024, 12, 26, 13, 42, 6, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(0, 20), 'execution_dead_time': datetime.time(0, 50), 'observation_dead_time': 'Espera por ingreso y apertura a rack', 'service_type': None, 'staff_dni': '1006087213', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 00:46:57.283 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.DatetimeFieldOverflow) date/time field value out of range: "43:22:58"
+CONTEXT:  SQL statement "INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP"
+PL/pgSQL function calculate_estimated_times() line 398 at SQL statement
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'ARISTIZABAL GONZALEZ LAURA CAMILA', 'code': 'TAS000000630976', 'client': 'ETB', 'description': "1. Direccion:CENTRAL FONTIBON  CARRERA 99 # 25  17    \r\n 2. CAV/ID:CAV2000011528 \r\n 3. Categorizacion Operacional:DEGRADACION \r\n 4. Descripcion ... (1382 characters truncated) ... 86 L-V 7 am - 4 pm\r\n\r\nNombre del especialista:  7x24\r\nCelular del especialista:  3058230711 - WS 3058230648 ASC - 3058224307 SGS (Por Whatsapp)", 'address': 'CENTRAL FONTIBON  CARRERA 99 # 25  17', 'cav_id': 'CAV2000011528', 'operational_category': 'DEGRADACION', 'request_activity': 'INMEDIATA', 'assigned_staff': 'MONTAÑEZ ALVIS JHOAN SEBASTIAN', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2024, 12, 24, 13, 38, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2024, 12, 24, 14, 10, 48, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2024, 12, 24, 17, 0, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2024, 12, 24, 15, 56, 15, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2024, 12, 24, 16, 31, 4, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2024, 12, 24, 18, 19, 8, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2024, 12, 26, 13, 42, 6, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(0, 20), 'execution_dead_time': datetime.time(0, 50), 'observation_dead_time': 'Espera por ingreso y apertura a rack', 'service_type': None, 'staff_dni': '1006087213', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 00:50:16.428 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.DatetimeFieldOverflow) date/time field value out of range: "43:22:58"
+CONTEXT:  SQL statement "INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP"
+PL/pgSQL function calculate_estimated_times() line 398 at SQL statement
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'ARISTIZABAL GONZALEZ LAURA CAMILA', 'code': 'TAS000000630976', 'client': 'ETB', 'description': "1. Direccion:CENTRAL FONTIBON  CARRERA 99 # 25  17    \r\n 2. CAV/ID:CAV2000011528 \r\n 3. Categorizacion Operacional:DEGRADACION \r\n 4. Descripcion ... (1382 characters truncated) ... 86 L-V 7 am - 4 pm\r\n\r\nNombre del especialista:  7x24\r\nCelular del especialista:  3058230711 - WS 3058230648 ASC - 3058224307 SGS (Por Whatsapp)", 'address': 'CENTRAL FONTIBON  CARRERA 99 # 25  17', 'cav_id': 'CAV2000011528', 'operational_category': 'DEGRADACION', 'request_activity': 'INMEDIATA', 'assigned_staff': 'MONTAÑEZ ALVIS JHOAN SEBASTIAN', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2024, 12, 24, 13, 38, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2024, 12, 24, 14, 10, 48, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2024, 12, 24, 17, 0, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2024, 12, 24, 15, 56, 15, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2024, 12, 24, 16, 31, 4, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2024, 12, 24, 18, 19, 8, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2024, 12, 26, 13, 42, 6, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(0, 20), 'execution_dead_time': datetime.time(0, 50), 'observation_dead_time': 'Espera por ingreso y apertura a rack', 'service_type': None, 'staff_dni': '1006087213', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 00:52:44.719 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.DatetimeFieldOverflow) date/time field value out of range: "43:22:58"
+CONTEXT:  SQL statement "INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP"
+PL/pgSQL function calculate_estimated_times() line 398 at SQL statement
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'ARISTIZABAL GONZALEZ LAURA CAMILA', 'code': 'TAS000000630976', 'client': 'ETB', 'description': "1. Direccion:CENTRAL FONTIBON  CARRERA 99 # 25  17    \r\n 2. CAV/ID:CAV2000011528 \r\n 3. Categorizacion Operacional:DEGRADACION \r\n 4. Descripcion ... (1382 characters truncated) ... 86 L-V 7 am - 4 pm\r\n\r\nNombre del especialista:  7x24\r\nCelular del especialista:  3058230711 - WS 3058230648 ASC - 3058224307 SGS (Por Whatsapp)", 'address': 'CENTRAL FONTIBON  CARRERA 99 # 25  17', 'cav_id': 'CAV2000011528', 'operational_category': 'DEGRADACION', 'request_activity': 'INMEDIATA', 'assigned_staff': 'MONTAÑEZ ALVIS JHOAN SEBASTIAN', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2024, 12, 24, 13, 38, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2024, 12, 24, 14, 10, 48, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2024, 12, 24, 17, 0, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2024, 12, 24, 15, 56, 15, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2024, 12, 24, 16, 31, 4, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2024, 12, 24, 18, 19, 8, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2024, 12, 26, 13, 42, 6, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(0, 20), 'execution_dead_time': datetime.time(0, 50), 'observation_dead_time': 'Espera por ingreso y apertura a rack', 'service_type': None, 'staff_dni': '1006087213', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 01:05:24.693 | ERROR    | routes.task:import_from_excel:170 - Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)
+2025-01-09 01:07:01.691 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.InvalidTimeZoneDisplacementValue) time zone displacement out of range: "-01:-54"
+CONTEXT:  SQL statement "INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP"
+PL/pgSQL function calculate_estimated_times() line 398 at SQL statement
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'GROSSO CUCUNUBA DANNA KATHERINE', 'code': 'TAS000000632270', 'client': 'SSCJ', 'description': '1. Direccion:KR 19 CL 51 SUR || https://maps.app.goo.gl/kUJnFfDp2K3pBq198 \r\n 2. CAV/ID:INC000013468796 \r\n 3. Categorizacion Operacional:INTERRUPC ... (568 characters truncated) ... Por WhatsApp de lunes-viernes 7:00am-3:00pm, sábados 7:00am-2:00pm).\r\n\r\nCelular del especialista 7 x 24: 3058230648 - 3058224307 (Por WhatsApp)."', 'address': 'KR 19 CL 51 SUR || https://maps.app.goo.gl/kUJnFfDp2K3pBq198', 'cav_id': 'INC000013468796', 'operational_category': 'INTERRUPCION', 'request_activity': 'PROGRAMADA', 'assigned_staff': 'USMA BASTIDAS CRISTIAN', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2024, 12, 27, 15, 40, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2024, 12, 27, 21, 29, 7, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2024, 12, 27, 5, 0, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2024, 12, 28, 4, 11, 7, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2024, 12, 28, 4, 43, 32, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2024, 12, 28, 6, 35, 53, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2024, 12, 28, 6, 35, 56, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(0, 30), 'execution_dead_time': datetime.time(3, 0), 'observation_dead_time': 'Desarrollo de la actividad y validación del PMT.', 'service_type': None, 'staff_dni': '1012369995', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 01:11:35.324 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.InvalidTimeZoneDisplacementValue) time zone displacement out of range: "-01:-54"
+CONTEXT:  SQL statement "INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP"
+PL/pgSQL function calculate_estimated_times() line 398 at SQL statement
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'GROSSO CUCUNUBA DANNA KATHERINE', 'code': 'TAS000000632270', 'client': 'SSCJ', 'description': '1. Direccion:KR 19 CL 51 SUR || https://maps.app.goo.gl/kUJnFfDp2K3pBq198 \r\n 2. CAV/ID:INC000013468796 \r\n 3. Categorizacion Operacional:INTERRUPC ... (568 characters truncated) ... Por WhatsApp de lunes-viernes 7:00am-3:00pm, sábados 7:00am-2:00pm).\r\n\r\nCelular del especialista 7 x 24: 3058230648 - 3058224307 (Por WhatsApp)."', 'address': 'KR 19 CL 51 SUR || https://maps.app.goo.gl/kUJnFfDp2K3pBq198', 'cav_id': 'INC000013468796', 'operational_category': 'INTERRUPCION', 'request_activity': 'PROGRAMADA', 'assigned_staff': 'USMA BASTIDAS CRISTIAN', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2024, 12, 27, 15, 40, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2024, 12, 27, 21, 29, 7, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2024, 12, 27, 5, 0, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2024, 12, 28, 4, 11, 7, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2024, 12, 28, 4, 43, 32, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2024, 12, 28, 6, 35, 53, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2024, 12, 28, 6, 35, 56, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(0, 30), 'execution_dead_time': datetime.time(3, 0), 'observation_dead_time': 'Desarrollo de la actividad y validación del PMT.', 'service_type': None, 'staff_dni': '1012369995', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 01:16:54.985 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.DatetimeFieldOverflow) date/time field value out of range: "64:36:35"
+CONTEXT:  SQL statement "INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP"
+PL/pgSQL function calculate_estimated_times() line 398 at SQL statement
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'GROSSO CUCUNUBA DANNA KATHERINE', 'code': 'TAS000000632507', 'client': 'MINISTERIO DE CULTURA', 'description': '1. Direccion:CRA 7 # 28-66 \r\n 2. CAV/ID:7825074 \r\n 3. Categorizacion Operacional:INTERRUPCION \r\n 4. Descripcion: **SE REQUIERE LLEVAR ANALIZADO ... (1011 characters truncated) ... A EN SITIO: 3175734081\r\n\r\nHORARIO DE ATENCIÓN: 24/7\r\n\r\nPERMISOS DE INGRESO: SI\r\n\r\nDESCRIPCIÓN DEL REQUERIMIENTO: NO INGRESAN LLAMADAS IVR', 'address': 'CRA 7 # 28-66', 'cav_id': '7825074', 'operational_category': 'INTERRUPCION', 'request_activity': 'INMEDIATA', 'assigned_staff': 'ELVER ESNEYER BAQUERO VARGAS', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2024, 12, 27, 17, 48, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2024, 12, 27, 19, 40, 36, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2024, 12, 30, 19, 0, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2024, 12, 30, 18, 58, 29, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2024, 12, 30, 19, 11, 42, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2024, 12, 30, 21, 6, 32, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2025, 1, 2, 13, 43, 7, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(1, 0), 'execution_dead_time': datetime.time(0, 30), 'observation_dead_time': 'Trámites de ingreso y respuesta gestión con el especialista ', 'service_type': None, 'staff_dni': '79636760', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 01:20:19.563 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.DatetimeFieldOverflow) date/time field value out of range: "64:36:35"
+CONTEXT:  SQL statement "INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP"
+PL/pgSQL function calculate_estimated_times() line 398 at SQL statement
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'GROSSO CUCUNUBA DANNA KATHERINE', 'code': 'TAS000000632507', 'client': 'MINISTERIO DE CULTURA', 'description': '1. Direccion:CRA 7 # 28-66 \r\n 2. CAV/ID:7825074 \r\n 3. Categorizacion Operacional:INTERRUPCION \r\n 4. Descripcion: **SE REQUIERE LLEVAR ANALIZADO ... (1011 characters truncated) ... A EN SITIO: 3175734081\r\n\r\nHORARIO DE ATENCIÓN: 24/7\r\n\r\nPERMISOS DE INGRESO: SI\r\n\r\nDESCRIPCIÓN DEL REQUERIMIENTO: NO INGRESAN LLAMADAS IVR', 'address': 'CRA 7 # 28-66', 'cav_id': '7825074', 'operational_category': 'INTERRUPCION', 'request_activity': 'INMEDIATA', 'assigned_staff': 'ELVER ESNEYER BAQUERO VARGAS', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2024, 12, 27, 17, 48, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2024, 12, 27, 19, 40, 36, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2024, 12, 30, 19, 0, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2024, 12, 30, 18, 58, 29, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2024, 12, 30, 19, 11, 42, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2024, 12, 30, 21, 6, 32, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2025, 1, 2, 13, 43, 7, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(1, 0), 'execution_dead_time': datetime.time(0, 30), 'observation_dead_time': 'Trámites de ingreso y respuesta gestión con el especialista ', 'service_type': None, 'staff_dni': '79636760', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 01:29:42.111 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.DatetimeFieldOverflow) date/time field value out of range: "123:42:03"
+CONTEXT:  SQL statement "INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP"
+PL/pgSQL function calculate_estimated_times() line 398 at SQL statement
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'ALVAREZ SAENZ PAOLA ESPERANZA', 'code': 'TAS000000634181', 'client': 'ETB', 'description': '1. Direccion:CARRERA 24 # 11 - 88 \r\n 2. CAV/ID:N/A \r\n 3. Categorizacion Operacional:INTERRUPCION \r\n 4. Descripcion:Actividad a Realizar: Medici ... (1410 characters truncated) ... 4307(Por Whatsapp)\r\n \r\n/////////////////////////////////////////////////////////////////\r\n\r\nMedicion cliente y central se requiere carnet ETB', 'address': 'CARRERA 24 # 11 - 88', 'cav_id': 'N/A', 'operational_category': 'INTERRUPCION', 'request_activity': 'INMEDIATA', 'assigned_staff': 'ZAPATA GUALTEROS THEYDY NICOLAS', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2025, 1, 2, 15, 32, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2025, 1, 2, 15, 48, 32, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2025, 1, 2, 16, 30, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2025, 1, 2, 15, 53, 55, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2025, 1, 2, 16, 25, 21, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2025, 1, 2, 16, 54, 3, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2025, 1, 7, 20, 36, 6, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(0, 20), 'execution_dead_time': datetime.time(0, 10), 'observation_dead_time': '00:22', 'service_type': None, 'staff_dni': '1030608332', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 01:33:43.823 | ERROR    | routes.task:import_from_excel:170 - This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.DatetimeFieldOverflow) date/time field value out of range: "123:42:03"
+CONTEXT:  SQL statement "INSERT INTO estimateds (
+        task_id,
+        expected_current_date_time,
+        compliance_etl_etr,
+        confirmation_waiting_time,
+        total_time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts,
+        vr_date,
+        vr_staff,
+        vr,
+        one_fifty,
+        esi_date,
+        esi_catv_test,
+        esi_staff,
+        root_cause_ant,
+        esi,
+        catv_test
+    )
+    VALUES (
+        NEW.id,
+        CASE 
+            WHEN calculated_time IS NOT NULL THEN to_char(calculated_time AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI')
+            ELSE NULL 
+        END,
+        compliance_result,
+        COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
+        COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
+		day_week,
+        dead_time,
+        dayy,
+        time_int,
+        monthh,
+        days_recurrence,
+        ts_status,
+        vr_date_result,
+        vr_staff_result,
+        vr_result,
+        one_fifty_result,
+        esi_date_result,
+        esi_catv_test_result,
+        esi_staff_result,
+        root_cause_ant_result,
+        esi_result,
+        catv_count
+    )
+    ON CONFLICT (task_id) DO UPDATE
+    SET 
+        expected_current_date_time = EXCLUDED.expected_current_date_time,
+        compliance_etl_etr = EXCLUDED.compliance_etl_etr,
+        confirmation_waiting_time = EXCLUDED.confirmation_waiting_time,
+        total_time = EXCLUDED.total_time,
+        day_week = EXCLUDED.day_week,
+        dead_time = EXCLUDED.dead_time,
+        dayy = EXCLUDED.dayy,
+        time_int = EXCLUDED.time_int,
+        monthh = EXCLUDED.monthh,
+        days_recurrence = EXCLUDED.days_recurrence,
+        ts = EXCLUDED.ts,
+        vr_date = EXCLUDED.vr_date,
+        vr_staff = EXCLUDED.vr_staff,
+        vr = EXCLUDED.vr,
+        one_fifty = EXCLUDED.one_fifty,
+        esi_date = EXCLUDED.esi_date,
+        esi_catv_test = EXCLUDED.esi_catv_test,
+        esi_staff = EXCLUDED.esi_staff,
+        root_cause_ant = EXCLUDED.root_cause_ant,
+        esi = EXCLUDED.esi,
+        catv_test = EXCLUDED.catv_test,
+        updated_at = CURRENT_TIMESTAMP"
+PL/pgSQL function calculate_estimated_times() line 398 at SQL statement
+
+[SQL: INSERT INTO tasks (documenter, code, client, description, address, cav_id, operational_category, request_activity, assigned_staff, status, date_delivery_time, assigned_time, scheduled_time, way_time, arrival_time, final_time, confirmation_time, arrival_dead_time, execution_dead_time, observation_dead_time, service_type, staff_dni, root_cause, attributable, resolutioncategory_2ps, customer_waiting, updated_at) VALUES (%(documenter)s, %(code)s, %(client)s, %(description)s, %(address)s, %(cav_id)s, %(operational_category)s, %(request_activity)s, %(assigned_staff)s, %(status)s, %(date_delivery_time)s, %(assigned_time)s, %(scheduled_time)s, %(way_time)s, %(arrival_time)s, %(final_time)s, %(confirmation_time)s, %(arrival_dead_time)s, %(execution_dead_time)s, %(observation_dead_time)s, %(service_type)s, %(staff_dni)s, %(root_cause)s, %(attributable)s, %(resolutioncategory_2ps)s, %(customer_waiting)s, %(updated_at)s) RETURNING tasks.id, tasks.created_at]
+[parameters: {'documenter': 'ALVAREZ SAENZ PAOLA ESPERANZA', 'code': 'TAS000000634181', 'client': 'ETB', 'description': '1. Direccion:CARRERA 24 # 11 - 88 \r\n 2. CAV/ID:N/A \r\n 3. Categorizacion Operacional:INTERRUPCION \r\n 4. Descripcion:Actividad a Realizar: Medici ... (1410 characters truncated) ... 4307(Por Whatsapp)\r\n \r\n/////////////////////////////////////////////////////////////////\r\n\r\nMedicion cliente y central se requiere carnet ETB', 'address': 'CARRERA 24 # 11 - 88', 'cav_id': 'N/A', 'operational_category': 'INTERRUPCION', 'request_activity': 'INMEDIATA', 'assigned_staff': 'ZAPATA GUALTEROS THEYDY NICOLAS', 'status': 'Completada', 'date_delivery_time': datetime.datetime(2025, 1, 2, 15, 32, tzinfo=TzInfo(UTC)), 'assigned_time': datetime.datetime(2025, 1, 2, 15, 48, 32, tzinfo=TzInfo(UTC)), 'scheduled_time': datetime.datetime(2025, 1, 2, 16, 30, tzinfo=TzInfo(UTC)), 'way_time': datetime.datetime(2025, 1, 2, 15, 53, 55, tzinfo=TzInfo(UTC)), 'arrival_time': datetime.datetime(2025, 1, 2, 16, 25, 21, tzinfo=TzInfo(UTC)), 'final_time': datetime.datetime(2025, 1, 2, 16, 54, 3, tzinfo=TzInfo(UTC)), 'confirmation_time': datetime.datetime(2025, 1, 7, 20, 36, 6, tzinfo=TzInfo(UTC)), 'arrival_dead_time': datetime.time(0, 20), 'execution_dead_time': datetime.time(0, 10), 'observation_dead_time': '00:22', 'service_type': None, 'staff_dni': '1030608332', 'root_cause': '', 'attributable': '', 'resolutioncategory_2ps': '', 'customer_waiting': None, 'updated_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+2025-01-09 01:52:14.232 | ERROR    | routes.task:import_from_excel:170 - Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)

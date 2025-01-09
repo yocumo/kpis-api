@@ -2,9 +2,9 @@ from enum import Enum
 
 
 class TaskStatusEnum(Enum):
-    completada = "active"
-    cancelada = "inactive"
-    asignada = "inactive"
+    completada = "Completada"
+    cancelada = "Cancelada"
+    asignada = "Asignada"
     encurso = "En curso"
     porconfirmar = "Final x Confirmar ETB"
-    encamino = "En camino"
+    encamino = "en camino"

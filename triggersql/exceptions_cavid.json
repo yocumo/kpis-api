@@ -1,0 +1,30 @@
+[
+    {
+        "id": "872edcd1-94a1-46d1-a67a-ae5d00ca8d42",
+        "cavid": "Anillos_Acceso",
+        "attributable_customer": "SI",
+        "created_at": "2024-12-20 18:02:16.281027+00",
+        "updated_at": null
+    },
+    {
+        "id": "9724ce3b-b59b-4440-b72f-427ea3a4de2b",
+        "cavid": "Anillos_Acceso1",
+        "attributable_customer": "SI",
+        "created_at": "2024-12-20 18:02:05.882777+00",
+        "updated_at": null
+    },
+    {
+        "id": "b0ca0bd8-4343-4355-9551-5fc1d1d81ee7",
+        "cavid": "N/A",
+        "attributable_customer": "SI",
+        "created_at": "2024-12-20 18:01:30.664609+00",
+        "updated_at": null
+    },
+    {
+        "id": "dc1a4732-596d-4801-9f37-4d3e057d16eb",
+        "cavid": "Anillos_Troncales",
+        "attributable_customer": "SI",
+        "created_at": "2024-12-20 18:01:54.400292+00",
+        "updated_at": null
+    }
+]

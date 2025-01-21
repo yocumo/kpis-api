@@ -1,0 +1,16 @@
+[
+    {
+        "id": "13a6045b-eb8a-4b85-b6a2-b0e5d459665e",
+        "activity": "PROGRAMADA",
+        "minut": "00:15:00",
+        "created_at": "2024-12-20 17:48:02.011494+00",
+        "updated_at": null
+    },
+    {
+        "id": "9fdb578f-8c87-410e-8b15-8007a5fffc8f",
+        "activity": "INMEDIATA",
+        "minut": "00:40:00",
+        "created_at": "2024-12-20 17:48:25.503073+00",
+        "updated_at": null
+    }
+]

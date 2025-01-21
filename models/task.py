@@ -127,9 +127,6 @@ class TaskUpdateSchema(TaskListSchemaCreate):
     pass
 
 
-# ----------------------------- TODO: LOGISTICA TIME :-----------------------------
-
-
 # ----------------------------- TODO:: COLUMNAS CALCULADAS -----------------------------
 class Estimated(TimestampMixin, Base):
     __tablename__ = "estimateds"

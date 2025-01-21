@@ -38,28 +38,6 @@ def create_task(form: TaskCreate, db: Session = Depends(get_db)):
     return task
 
 
-def normalize_time(t):
-    if t is None:
-        return None
-
-    if not hasattr(t, "tzinfo") or t.tzinfo is None:
-        return t
-
-    try:
-        base_date = datetime.now(timezone.utc).date()
-        dt_with_tz = datetime.combine(base_date, t)
-        return dt_with_tz.astimezone(timezone.utc).time()
-    except Exception as e:
-        print(f"Error normalizando time: {e}")
-        return t
-
-
-def ensure_utc(dt):
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
-
-
 @task.post("/import-from-excel/")
 def import_from_excel(form: TaskImport, db: Session = Depends(get_db)):
 
@@ -172,4 +150,3 @@ def import_from_excel(form: TaskImport, db: Session = Depends(get_db)):
             status_code=400,
             detail=f"Error global al importar los datos: {str(global_error)}",
         )
-

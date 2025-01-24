@@ -2,4 +2,4 @@ __pycache__
 *.pyc
 task_import_errors.txt
 /venv
-# app.log
+app.log

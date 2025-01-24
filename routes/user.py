@@ -36,7 +36,7 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     try:
         user_exist = search_user_by_dni(user.dni, db)
 
-        if user_exist:
+        if user_exist is not None:
             raise HTTPException(status_code=400, detail="El usuario ya existe")
 
         if user.email:

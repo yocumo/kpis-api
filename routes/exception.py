@@ -45,7 +45,22 @@ def create_activity(form: ExcepActivityCreate, db: Session = Depends(get_db)):
     return activity
 
 
-# TODO: --------------------------------- FIN Excepciones Actividades
+@exceptione.patch("/activities/{id}")
+def update_activity(id: str, form: ExcepActivityCreate, db: Session = Depends(get_db)):
+    activity = db.query(ExceptionActivity).filter(ExceptionActivity.id == id).first()
+    if not activity:
+        raise HTTPException(status_code=404, detail="Actividad no encontrada")
+
+    for key, value in form.dict(exclude_unset=True).items():
+        setattr(activity, key, value)
+
+    db.add(activity)
+    db.commit()
+    db.refresh(activity)
+    return activity
+
+
+# TODO: --------------------------------- FIN Excepciones Categorias
 @exceptione.get("/categories")
 def find_all_category(db: Session = Depends(get_db)):
     categories = db.query(ExceptionCategory).all()
@@ -59,6 +74,21 @@ def create_category(form: ExcepCategoryCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(category)
 
+    return category
+
+
+@exceptione.patch("/categories/{id}")
+def update_category(id: str, form: ExcepCategoryCreate, db: Session = Depends(get_db)):
+    category = db.query(ExceptionCategory).filter(ExceptionCategory.id == id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Categoria no encontrada")
+
+    for key, value in form.dict(exclude_unset=True).items():
+        setattr(category, key, value)
+
+    db.add(category)
+    db.commit()
+    db.refresh(category)
     return category
 
 
@@ -78,4 +108,19 @@ def create_cavid(form: ExcepCavidCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(cavid)
 
+    return cavid
+
+
+@exceptione.patch("/cavid/{id}")
+def update_cavid(id: str, form: ExcepCavidCreate, db: Session = Depends(get_db)):
+    cavid = db.query(ExceptionCavid).filter(ExceptionCavid.id == id).first()
+    if not cavid:
+        raise HTTPException(status_code=404, detail="CAV/ID no encontrada")
+
+    for key, value in form.dict(exclude_unset=True).items():
+        setattr(cavid, key, value)
+
+    db.add(cavid)
+    db.commit()
+    db.refresh(cavid)
     return cavid

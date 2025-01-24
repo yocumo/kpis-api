@@ -112,7 +112,6 @@ class TaskListSchemaCreate(BaseModel):
     customer_waiting: Optional[time] = None
     service_type: Optional[str] = None
     staff_dni: Optional[str] = None
-    
 
     class Config:
         from_attributes = True
@@ -121,6 +120,24 @@ class TaskListSchemaCreate(BaseModel):
 class TaskImport(BaseModel):
     admin_id: str
     tasks: List[TaskListSchemaCreate]
+
+
+## CRUDO
+class TaskListCrudoCreate(BaseModel):
+    code: Optional[str] = None
+    root_cause: Optional[str] = None
+    attributable: Optional[str] = None
+    resolutioncategory_2ps: Optional[str] = None
+    customer_waiting: Optional[time] = None
+    service_type: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class TaskCrudoImport(BaseModel):
+    admin_id: str
+    tasks: List[TaskListCrudoCreate]
 
 
 class TaskUpdateSchema(TaskListSchemaCreate):

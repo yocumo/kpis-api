@@ -2,7 +2,7 @@ from ast import parse
 from datetime import datetime, timedelta, timezone
 import os
 import sys
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 
 # from requests import Session
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 from loguru import logger
 
-from models.task import Task, TaskCreate, TaskImport
+from models.task import Task, TaskCreate, TaskCrudoImport, TaskImport
 from datetime import datetime, time
 
 task = APIRouter(
@@ -149,4 +149,62 @@ def import_from_excel(form: TaskImport, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=400,
             detail=f"Error global al importar los datos: {str(global_error)}",
+        )
+
+
+# TODO:: IMPORTAR CRUDO
+@task.post("/import-crudo/")
+async def import_crudo_data(form: TaskCrudoImport, db: Session = Depends(get_db)):
+    try:
+        crudo_data = form.tasks
+        updated_tasks = []
+        tasknot_found = []
+
+        for crudo in crudo_data:
+            task = db.query(Task).filter(Task.code == crudo.code).first()
+
+            if not task:
+                print(f"Tarea {crudo.code} no encontrada.")
+                tasknot_found.append(crudo.code)
+                logger.error(f"Crudo no encontrado {tasknot_found}")
+                continue
+
+            # Only update fields that are not None or empty
+            if crudo.root_cause is not None and crudo.root_cause.strip():
+                task.root_cause = crudo.root_cause
+
+            if crudo.attributable is not None and crudo.attributable.strip():
+                task.attributable = crudo.attributable
+
+            if (
+                crudo.resolutioncategory_2ps is not None
+                and crudo.resolutioncategory_2ps.strip()
+            ):
+                task.resolutioncategory_2ps = crudo.resolutioncategory_2ps
+
+            if crudo.customer_waiting is not None and crudo.customer_waiting.strip():
+                task.customer_waiting = crudo.customer_waiting
+
+            if crudo.service_type is not None and crudo.service_type.strip():
+                task.service_type = crudo.service_type
+
+            db.add(task)
+            db.commit()
+            db.refresh(task)
+            updated_tasks.append(task)
+
+        return JSONResponse(
+            {
+                "code": 200,
+                "message": f"Datos importados. {len(updated_tasks)} tareas procesadas correctamente.",
+                "successful_tasks": len(updated_tasks),
+            }
+        )
+
+    except Exception as global_error:
+        db.rollback()
+        logger.error(global_error)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error global al importar los datos del CRUDO: {str(global_error)}",
         )

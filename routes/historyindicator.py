@@ -65,7 +65,9 @@ def calcular_kpis_calculados(db: Session, month: str, service_type: str):
     )
 
     etl_rate = round((etl_cumple / etl_total * 100) if etl_total > 0 else 0, 2)
-
+    
+    print("etl_rate", etl_total, etl_cumple, etl_rate)
+    
     # TODO:: Cálculo de ETR (Tiempo de Respuesta)
     etr_total = sum(
         1

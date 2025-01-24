@@ -11,3 +11,7 @@ SQLALCHEMY_DATABASE_URL = "postgresql://admeiasa:eiasa.adm2024@db:5432/etbkpi_ma
 
 # SQLALCHEMY_DATABASE_URL = "postgresql://kpis_api_user:Yl95krRVDEoh45s93uxEfWAydOObVrk8@dpg-cth51t9opnds73auvsi0-a.oregon-postgres.render.com/kpis_api"
 
+# Quitar de futuros cambios en git
+git update-index --assume-unchanged app.log
+# (Opcional) Si en el futuro quieres que Git vuelva a rastrear cambios en
+git update-index --no-assume-unchanged app.log

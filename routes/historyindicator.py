@@ -216,7 +216,7 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
             cd=calculate_percentage(merged_data.get("CD", 0), 95),
             etci=calculate_percentage(merged_data.get("ETCI", 0), 100),
             es=calculate_percentage(merged_data.get("ES", 0), kpis_calculados["es"]),
-            total=math.ceil(kpis_calculados["total"] * 100),
+            total=math.ceil(kpis_calculados["total"] / 100),
             typei=TypeIHistoryEnum.calculated.value,
         )
 

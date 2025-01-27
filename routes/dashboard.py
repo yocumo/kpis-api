@@ -127,13 +127,16 @@ def get_dashboard(
         )
 
         activity_percentages = {"immediate": 0, "programmed": 0}
+        activity_counts_data = {"immediate": 0, "programmed": 0}
 
         for activity, count in activity_counts:
             if activity == "INMEDIATA":
+                activity_counts_data["immediate"] = count
                 activity_percentages["immediate"] = round(
                     (count / total_activities) * 100, 2
                 )
             elif activity == "PROGRAMADA":
+                activity_counts_data["programmed"] = count
                 activity_percentages["programmed"] = round(
                     (count / total_activities) * 100, 2
                 )
@@ -144,6 +147,7 @@ def get_dashboard(
                 "customer_count": taskCustomer,
                 "count_by_status": count_by_status,
                 "activity_percentages": activity_percentages,
+                "activity_counts": activity_counts_data,
                 "tasks_by_day": tasks_by_day,
             }
         )

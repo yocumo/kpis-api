@@ -1,8 +1,10 @@
 from ast import parse
 from datetime import datetime, timedelta, timezone
+from io import BytesIO
 import os
 import sys
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+import pandas as pd
 
 # from requests import Session
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -208,3 +210,135 @@ async def import_crudo_data(form: TaskCrudoImport, db: Session = Depends(get_db)
             status_code=400,
             detail=f"Error global al importar los datos del CRUDO: {str(global_error)}",
         )
+
+
+def parse_time_value(value):
+    """
+    Convierte diferentes formatos de tiempo a time without timezone
+    """
+    if pd.isna(value):
+        return None
+
+    try:
+        # Si es un string, intentar diferentes formatos
+        if isinstance(value, str):
+            # Intentar formato "dd/mm/yyyy hh:mm:ss p. m."
+            try:
+                dt = datetime.strptime(value, "%d/%m/%Y %I:%M:%S %p. m.")
+                return dt.time()
+            except ValueError:
+                pass
+
+            # Intentar formato "dd/mm/yyyy hh:mm:ss"
+            try:
+                dt = datetime.strptime(value, "%d/%m/%Y %H:%M:%S")
+                return dt.time()
+            except ValueError:
+                pass
+
+            # Intentar formato "hh:mm:ss"
+            try:
+                t = datetime.strptime(value, "%H:%M:%S").time()
+                return t
+            except ValueError:
+                pass
+
+        # Si es datetime
+        elif isinstance(value, datetime):
+            return value.time()
+
+        # Si es time
+        elif isinstance(value, time):
+            return value
+
+    except Exception as e:
+        logger.error(f"Error parseando tiempo: {value}, error: {str(e)}")
+        return None
+
+    return None
+
+
+@task.post("/upload-excel")
+async def upload_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    try:
+        contents = await file.read()
+        excel_data = BytesIO(contents)
+        df = pd.read_excel(excel_data)
+
+        required_columns = [
+            "code",
+            "root_cause",
+            "attributable",
+            "resolutioncategory_2ps",
+            "customer_waiting",
+            "service_type",
+        ]
+
+        if not all(col in df.columns for col in required_columns):
+            return {"error": "Columnas requeridas faltantes en el Excel"}
+
+        successful_updates = 0
+        failed_updates = 0
+
+        for index, row in df.iterrows():
+            try:
+                task = db.query(Task).filter(Task.code == row["code"]).first()
+
+                if task:
+                    customer_waiting_time = parse_time_value(row["customer_waiting"])
+
+                    task.root_cause = (
+                        row["root_cause"] if not pd.isna(row["root_cause"]) else None
+                    )
+                    task.attributable = (
+                        row["attributable"]
+                        if not pd.isna(row["attributable"])
+                        else None
+                    )
+                    task.resolutioncategory_2ps = (
+                        row["resolutioncategory_2ps"]
+                        if not pd.isna(row["resolutioncategory_2ps"])
+                        else None
+                    )
+                    task.customer_waiting = customer_waiting_time
+                    task.service_type = (
+                        row["service_type"]
+                        if not pd.isna(row["service_type"])
+                        else None
+                    )
+
+                    try:
+                        db.commit()
+                        successful_updates += 1
+                    except Exception as commit_error:
+                        db.rollback()
+                        raise commit_error
+                else:
+                    failed_updates += 1
+                    print(
+                        f"No se encontró la tarea con código: {row['code']} (fila {index + 1})"
+                    )
+                    # logger.error(
+                    #     f"No se encontró la tarea con código: {row['code']} (fila {index + 1})"
+                    # )
+
+            except Exception as e:
+                failed_updates += 1
+                db.rollback()
+                logger.error(
+                    f"Error actualizando fila {index + 1}, code: {row['code']}: {str(e)}"
+                )
+                continue
+
+        return JSONResponse(
+            {
+                "code": 200,
+                "successful_tasks": successful_updates,
+                "failed_updates": failed_updates,
+                "total_rows_processed": len(df),
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error general procesando archivo: {str(e)}")
+        return {"error": str(e), "status": "error"}

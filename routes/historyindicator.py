@@ -234,17 +234,27 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
         datos_resultado = HistoryIndicator(
             month=request.month,
             service_type_name=request.service_type,
-            etl=calculate_percentage(merged_data.get("ETL", 0), kpis_calculados["etl"]),
-            etr=calculate_percentage(merged_data.get("ETR", 0), kpis_calculados["etr"]),
+            etl=round(
+                calculate_percentage(merged_data.get("ETL", 0), kpis_calculados["etl"]),
+                2,
+            ),
+            etr=round(
+                calculate_percentage(merged_data.get("ETR", 0), kpis_calculados["etr"]),
+                2,
+            ),
             ts=calculate_percentage(
                 merged_data.get("TS", 0), kpis_calculados.get("ts", 0)
             ),
-            vr=calculate_percentage(merged_data.get("VR", 0), kpis_calculados["vr"]),
+            vr=round(
+                calculate_percentage(merged_data.get("VR", 0), kpis_calculados["vr"]), 2
+            ),
             esi=calculate_percentage(merged_data.get("ESI", 0), kpis_calculados["esi"]),
             efo=calculate_percentage(merged_data.get("EFO", 0), 100),
             cd=calculate_percentage(merged_data.get("CD", 0), 95),
             etci=calculate_percentage(merged_data.get("ETCI", 0), 100),
-            es=calculate_percentage(merged_data.get("ES", 0), kpis_calculados["es"]),
+            es=round(
+                calculate_percentage(merged_data.get("ES", 0), kpis_calculados["es"]), 2
+            ),
             total=total,
             typei=TypeIHistoryEnum.calculated.value,
         )

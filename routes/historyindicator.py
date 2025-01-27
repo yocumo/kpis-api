@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import case
 from sqlalchemy.orm import Session
 
 # from config.db import get_db
@@ -65,9 +66,9 @@ def calcular_kpis_calculados(db: Session, month: str, service_type: str):
     )
 
     etl_rate = round((etl_cumple / etl_total * 100) if etl_total > 0 else 0, 2)
-    
-    print("etl_rate", etl_total, etl_cumple, etl_rate)
-    
+
+    # print("etl_rate", etl_total, etl_cumple, etl_rate)
+
     # TODO:: Cálculo de ETR (Tiempo de Respuesta)
     etr_total = sum(
         1
@@ -163,7 +164,7 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
             month=request.month,
             service_type_name=request.service_type,
             typei=TypeIHistoryEnum.registered.value,
-            **{k.lower(): v for k, v in merged_data.items()}
+            **{k.lower(): v for k, v in merged_data.items()},
         )
         db.add(datos_ingresados)
 
@@ -241,4 +242,52 @@ def search_history(request: RequestSearchHistory, db: Session = Depends(get_db))
         return kpis
 
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@kpi.post("/search/allhistory")
+def search_all_history(request: RequestSearchHistory, db: Session = Depends(get_db)):
+
+    try:
+        kpis = (
+            db.query(HistoryIndicator)
+            .filter(HistoryIndicator.month == request.month)
+            .filter(HistoryIndicator.service_type_name == request.serviceType)
+            .all()
+        )
+
+        if not kpis:
+            raise HTTPException(status_code=404, detail="Indicadores no encontrados")
+        return kpis
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@kpi.post("/delete/allhistory")
+def delete_all_history(request: RequestSearchHistory, db: Session = Depends(get_db)):
+    try:
+        deleted_rows = (
+            db.query(HistoryIndicator)
+            .filter(HistoryIndicator.month == request.month)
+            .filter(HistoryIndicator.service_type_name == request.serviceType)
+            .delete(synchronize_session=False)
+        )
+
+        db.commit()
+
+        if deleted_rows == 0:
+            raise HTTPException(
+                status_code=404, detail="No se encontraron indicadores para eliminar"
+            )
+
+        return JSONResponse(
+            {
+                "code": 200,
+                "message": "Cáculo del KPI eliminado correctamente",
+            }
+        )
+
+    except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=500, detail=str(e))

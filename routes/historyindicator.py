@@ -1,3 +1,4 @@
+import math
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import case
 from sqlalchemy.orm import Session
@@ -120,17 +121,34 @@ def calcular_kpis_calculados(db: Session, month: str, service_type: str):
     )
 
     # TODO: TOTAL
-    total_calculado = (
-        etl_rate
-        + etr_rate
-        + 0  # TS inicialmente es NULL
-        + vr_rate
-        + esi_rate
-        + 100
-        + 95
-        + 100
-        + es_rate
-    )
+    if service_type == "ASG_CUM_01":
+
+        total_calculado = (
+            etl_rate
+            + etr_rate
+            + 0  # TS inicialmente es NULL
+            + vr_rate
+            + esi_rate
+            + 100
+            + 96
+            + 100
+            + es_rate
+        )
+
+    elif service_type == "ASG_CUM_03":
+        total_calculado = vr_rate + esi_rate + 100 + 96
+
+    else:
+        total_calculado = (
+            etl_rate
+            + etr_rate
+            + 0  # TS inicialmente es NULL
+            + vr_rate
+            + esi_rate
+            + 100
+            + 96
+            + es_rate
+        )
 
     return {
         "month": month,
@@ -141,11 +159,17 @@ def calcular_kpis_calculados(db: Session, month: str, service_type: str):
         "vr": vr_rate,
         "esi": esi_rate,
         "efo": 100,
-        "cd": 95,
+        "cd": 96,
         "etci": 100,
         "es": es_rate,
         "total": total_calculado,
     }
+
+
+def calculate_percentage(value, multiplier):
+    if value is None or multiplier is None:
+        return 0
+    return (value * multiplier) / 100
 
 
 @kpi.post("/calculate-kpis")
@@ -181,16 +205,18 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
         datos_resultado = HistoryIndicator(
             month=request.month,
             service_type_name=request.service_type,
-            etl=(merged_data.get("ETL", 0) * kpis_calculados["etl"]),
-            etr=(merged_data.get("ETR", 0) * kpis_calculados["etr"]),
-            ts=(merged_data.get("TS", 0) * (kpis_calculados["ts"] or 0)),
-            vr=(merged_data.get("VR", 0) * kpis_calculados["vr"]),
-            esi=(merged_data.get("ESI", 0) * kpis_calculados["esi"]),
-            efo=(merged_data.get("EFO", 0) * 100),
-            cd=(merged_data.get("CD", 0) * 95),
-            etci=(merged_data.get("ETCI", 0) * 100),
-            es=(merged_data.get("ES", 0) * kpis_calculados["es"]),
-            total=(merged_data.get("TOTAL", 0) * kpis_calculados["total"] * 100),
+            etl=calculate_percentage(merged_data.get("ETL", 0), kpis_calculados["etl"]),
+            etr=calculate_percentage(merged_data.get("ETR", 0), kpis_calculados["etr"]),
+            ts=calculate_percentage(
+                merged_data.get("TS", 0), kpis_calculados.get("ts", 0)
+            ),
+            vr=calculate_percentage(merged_data.get("VR", 0), kpis_calculados["vr"]),
+            esi=calculate_percentage(merged_data.get("ESI", 0), kpis_calculados["esi"]),
+            efo=calculate_percentage(merged_data.get("EFO", 0), 100),
+            cd=calculate_percentage(merged_data.get("CD", 0), 95),
+            etci=calculate_percentage(merged_data.get("ETCI", 0), 100),
+            es=calculate_percentage(merged_data.get("ES", 0), kpis_calculados["es"]),
+            total=math.ceil(kpis_calculados["total"] * 100),
             typei=TypeIHistoryEnum.calculated.value,
         )
 

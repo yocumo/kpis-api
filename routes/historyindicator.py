@@ -162,7 +162,7 @@ def calcular_kpis_calculados(db: Session, month: str, service_type: str):
         "cd": 96,
         "etci": 100,
         "es": es_rate,
-        "total": total_calculado,
+        "total": 0,
     }
 
 
@@ -201,6 +201,35 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
         )
         db.add(datos_calculados)
 
+        total = 0
+        if TypeIHistoryEnum.calculated.value == "calculated":
+            total = math.ceil(
+                sum(
+                    [
+                        calculate_percentage(
+                            merged_data.get("ETL", 0), kpis_calculados["etl"]
+                        ),
+                        calculate_percentage(
+                            merged_data.get("ETR", 0), kpis_calculados["etr"]
+                        ),
+                        calculate_percentage(
+                            merged_data.get("TS", 0), kpis_calculados.get("ts", 0)
+                        ),
+                        calculate_percentage(
+                            merged_data.get("VR", 0), kpis_calculados["vr"]
+                        ),
+                        calculate_percentage(
+                            merged_data.get("ESI", 0), kpis_calculados["esi"]
+                        ),
+                        calculate_percentage(merged_data.get("EFO", 0), 100),
+                        calculate_percentage(merged_data.get("CD", 0), 95),
+                        calculate_percentage(merged_data.get("ETCI", 0), 100),
+                        calculate_percentage(
+                            merged_data.get("ES", 0), kpis_calculados["es"]
+                        ),
+                    ]
+                )
+            )
         # TODO::3. Fila de RESULTADO (multiplicación)
         datos_resultado = HistoryIndicator(
             month=request.month,
@@ -216,7 +245,7 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
             cd=calculate_percentage(merged_data.get("CD", 0), 95),
             etci=calculate_percentage(merged_data.get("ETCI", 0), 100),
             es=calculate_percentage(merged_data.get("ES", 0), kpis_calculados["es"]),
-            total=math.ceil(kpis_calculados["total"] / 100),
+            total=total,
             typei=TypeIHistoryEnum.calculated.value,
         )
 

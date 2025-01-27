@@ -21,14 +21,14 @@ from models import exception as exception
 
 user_model.Base.metadata.create_all(bind=engine)
 history_indicator.Base.metadata.create_all(bind=engine)
-exception.Base.metadata.create_all(bind=engine) 
+exception.Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI(title="KPI - ETB")
 
 
 # Configure loguru
-logger.remove()  
+logger.remove()
 logger.add(
     sys.stdout,
     colorize=True,
@@ -46,6 +46,7 @@ app.add_middleware(
 )
 
 
+
 app.include_router(auth)
 app.include_router(users)
 app.include_router(task)
@@ -56,7 +57,6 @@ app.include_router(dashboard)
 
 # TODO: Task-Home
 app.include_router(task_home)
-
 
 
 if __name__ == "__main__":

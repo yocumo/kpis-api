@@ -114,9 +114,11 @@ def calcular_kpis_calculados(db: Session, month: str, service_type: str):
     no_cumple_count = sum(1 for task in task_summary if task.ts == "NO CUMPLE")
     total_count = len(task_summary)
 
+    cumple__nocumple_count = cumple_count + no_cumple_count
+
     es_rate = (
-        round(cumple_count / (cumple_count + no_cumple_count) * 100, 2)
-        if total_count > 0
+        round((cumple_count / cumple__nocumple_count) * 100, 2)
+        if total_count > 0 and cumple__nocumple_count > 0
         else 0
     )
 
@@ -167,7 +169,7 @@ def calcular_kpis_calculados(db: Session, month: str, service_type: str):
 
 
 def calculate_percentage(value, multiplier):
-    if value is None or multiplier is None:
+    if value is None or multiplier is None or multiplier == 0:
         return 0
     return (value * multiplier) / 100
 
@@ -176,6 +178,21 @@ def calculate_percentage(value, multiplier):
 def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)):
 
     try:
+
+        db_exist = (
+            db.query(HistoryIndicator)
+            .filter(
+                HistoryIndicator.month == request.month,
+                HistoryIndicator.service_type_name == request.service_type,
+            )
+            .first()
+        )
+        if db_exist is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="El KPI ya existe para el mes y servicio indicado, si quiere volver a calcularlo debe eliminar el existente.",
+            )
+
         merged_data = {}
         for item in request.data:
             merged_data.update(item)
@@ -212,9 +229,7 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
                         calculate_percentage(
                             merged_data.get("ETR", 0), kpis_calculados["etr"]
                         ),
-                        calculate_percentage(
-                            merged_data.get("TS", 0), kpis_calculados.get("ts", 0)
-                        ),
+                        0,
                         calculate_percentage(
                             merged_data.get("VR", 0), kpis_calculados["vr"]
                         ),
@@ -242,9 +257,7 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
                 calculate_percentage(merged_data.get("ETR", 0), kpis_calculados["etr"]),
                 2,
             ),
-            ts=calculate_percentage(
-                merged_data.get("TS", 0), kpis_calculados.get("ts", 0)
-            ),
+            ts=0,
             vr=round(
                 calculate_percentage(merged_data.get("VR", 0), kpis_calculados["vr"]), 2
             ),

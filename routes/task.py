@@ -39,177 +39,241 @@ def create_task(form: TaskCreate, db: Session = Depends(get_db)):
 
     return task
 
-
-@task.post("/import-from-excel/")
-def import_from_excel(form: TaskImport, db: Session = Depends(get_db)):
-
-    task_data = form.tasks
-    updated_tasks = []
-    error_task_codes = []
+def convert_string_to_time(time_str):
+    """
+    Convierte un string de tiempo a objeto time.
+    Acepta formatos como: "HH:MM:SS", "HH:MM"
+    """
+    if pd.isna(time_str):
+        return None
 
     try:
-        for item in task_data:
+        # Intentar diferentes formatos comunes
+        formats_to_try = ["%H:%M:%S", "%H:%M", "%I:%M:%S %p", "%I:%M %p"]
+
+        for fmt in formats_to_try:
             try:
-
-                normalized_arrival_dead_time = item.arrival_dead_time
-                normalized_execution_dead_time = item.execution_dead_time
-                normalized_customer_waiting = item.customer_waiting
-
-                print("CW", normalized_customer_waiting, item.customer_waiting)
-
-                task = db.query(Task).filter(Task.code == item.code).first()
-
-                if task:
-                    # Actualización de tarea existente
-                    task.documenter = item.documenter
-                    task.code = item.code
-                    task.client = item.client
-                    task.description = item.description
-                    task.address = item.address
-                    task.cav_id = str(item.cav_id)
-                    task.operational_category = item.operational_category
-                    task.request_activity = item.request_activity
-                    task.assigned_staff = item.assigned_staff
-                    task.status = item.status
-                    task.date_delivery_time = item.date_delivery_time
-                    task.assigned_time = item.assigned_time
-                    task.scheduled_time = item.scheduled_time
-                    task.way_time = item.way_time
-                    task.arrival_time = item.arrival_time
-                    task.final_time = item.final_time
-                    task.confirmation_time = item.confirmation_time
-                    task.arrival_dead_time = normalized_arrival_dead_time
-                    task.execution_dead_time = normalized_execution_dead_time
-                    task.observation_dead_time = item.observation_dead_time
-                    task.root_cause = item.root_cause
-                    task.attributable = item.attributable
-                    task.resolutioncategory_2ps = item.resolutioncategory_2ps
-                    task.customer_waiting = normalized_customer_waiting
-                    task.service_type = item.service_type
-                    task.staff_dni = item.staff_dni
-
-                else:
-                    # Creación de nueva tarea
-                    task = Task(
-                        documenter=item.documenter,
-                        code=item.code,
-                        client=item.client,
-                        description=item.description,
-                        address=item.address,
-                        cav_id=str(item.cav_id),
-                        operational_category=item.operational_category,
-                        request_activity=item.request_activity,
-                        assigned_staff=item.assigned_staff,
-                        status=item.status,
-                        date_delivery_time=item.date_delivery_time,
-                        assigned_time=(item.assigned_time),
-                        scheduled_time=(item.scheduled_time),
-                        way_time=(item.way_time),
-                        arrival_time=(item.arrival_time),
-                        final_time=(item.final_time),
-                        confirmation_time=(item.confirmation_time),
-                        arrival_dead_time=normalized_arrival_dead_time,
-                        execution_dead_time=normalized_execution_dead_time,
-                        observation_dead_time=item.observation_dead_time,
-                        root_cause=item.root_cause,
-                        attributable=item.attributable,
-                        resolutioncategory_2ps=item.resolutioncategory_2ps,
-                        customer_waiting=normalized_customer_waiting,
-                        service_type=item.service_type,
-                        staff_dni=item.staff_dni,
-                    )
-                    db.add(task)
-
-                db.flush()
-                updated_tasks.append(task)
-
-            except Exception as task_error:
-                error_task_codes.append(item.code)
-                print(f"Error con tarea {item.code}: {str(task_error)}")
+                parsed_time = datetime.strptime(str(time_str).strip(), fmt).time()
+                return parsed_time
+            except ValueError:
                 continue
 
-        db.commit()
+        raise ValueError(f"No se pudo convertir el tiempo: {time_str}")
+    except Exception as e:
+        logger.error(f"Error convirtiendo tiempo {time_str}: {str(e)}")
+        return None
 
+
+@task.post("/upload-task/")
+async def upload_task_excel(
+    file: UploadFile = File(...), db: Session = Depends(get_db)
+):
+    error_task_codes = []
+    updated_tasks = []
+
+    try:
+        try:
+            contents = await file.read()
+            excel_data = BytesIO(contents)
+            df = pd.read_excel(excel_data)
+        except Exception as e:
+            logger.error(f"Error al leer el archivo Excel: {str(e)}")
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "error": "Error al leer el archivo Excel. Verifique el formato."
+                },
+            )
+
+        # Define column groups for validation and processing
+        time_string_columns = ["arrival_dead_time", "execution_dead_time"]
+
+        datetime_columns = [
+            "date_delivery_time",
+            "assigned_time",
+            "scheduled_time",
+            "way_time",
+            "arrival_time",
+            "final_time",
+            "confirmation_time",
+        ]
+
+        required_columns = [
+            "documenter",
+            "code",
+            "client",
+            "description",
+            "address",
+            "cav_id",
+            "operational_category",
+            "request_activity",
+            "assigned_staff",
+            "status",
+            *datetime_columns,
+            *time_string_columns,
+            "observation_dead_time",
+            "staff_dni",
+        ]
+
+        # Validate required columns
+        if not all(col in df.columns for col in required_columns):
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "error": f"Columnas requeridas faltantes en el Excel: {', '.join(missing_columns)}"
+                },
+            )
+
+        # Process each row independently
+        for index, row in df.iterrows():
+            current_session = db  # Create savepoint
+            try:
+                # Validar que el código no esté vacío
+                if pd.isna(row["code"]):
+                    error_task_codes.append(f"Fila {index + 1}: Código vacío")
+                    current_session.rollback()
+                    continue
+
+                # Process time and datetime values for current row
+                processed_data = {}
+
+                # Process string time columns (arrival_dead_time, execution_dead_time)
+                for col in time_string_columns:
+                    try:
+                        processed_data[col] = (
+                            convert_string_to_time(row[col])
+                            if pd.notna(row[col])
+                            else None
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Error procesando columna {col} en fila {index + 1}: {str(e)}"
+                        )
+                        processed_data[col] = None
+
+                # Process datetime columns
+                for col in datetime_columns:
+                    try:
+                        processed_data[col] = (
+                            pd.to_datetime(row[col]) if pd.notna(row[col]) else None
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Error procesando columna {col} en fila {index + 1}: {str(e)}"
+                        )
+                        processed_data[col] = None
+
+                # Prepare task data
+                task_data = {
+                    "documenter": (
+                        row["documenter"] if pd.notna(row["documenter"]) else None
+                    ),
+                    "code": str(row["code"]),
+                    "client": row["client"] if pd.notna(row["client"]) else None,
+                    "description": (
+                        row["description"] if pd.notna(row["description"]) else None
+                    ),
+                    "address": row["address"] if pd.notna(row["address"]) else None,
+                    "cav_id": str(row["cav_id"]) if pd.notna(row["cav_id"]) else None,
+                    "operational_category": (
+                        row["operational_category"]
+                        if pd.notna(row["operational_category"])
+                        else None
+                    ),
+                    "request_activity": (
+                        row["request_activity"]
+                        if pd.notna(row["request_activity"])
+                        else None
+                    ),
+                    "assigned_staff": (
+                        row["assigned_staff"]
+                        if pd.notna(row["assigned_staff"])
+                        else None
+                    ),
+                    "status": row["status"] if pd.notna(row["status"]) else None,
+                    "staff_dni": (
+                        row["staff_dni"] if pd.notna(row["staff_dni"]) else None
+                    ),
+                    "observation_dead_time": (
+                        row["observation_dead_time"]
+                        if pd.notna(row["observation_dead_time"])
+                        else None
+                    ),
+                    **processed_data,  # Add processed time and datetime values
+                }
+
+                try:
+                    # Intentar obtener la tarea existente
+                    task = db.query(Task).filter(Task.code == task_data["code"]).first()
+
+                    if task:
+                        # Update existing task
+                        for key, value in task_data.items():
+                            setattr(task, key, value)
+                    else:
+                        # Create new task
+                        task = Task(**task_data)
+                        db.add(task)
+
+                    db.flush()  # Try to flush changes
+                    updated_tasks.append(task_data["code"])
+                    current_session.commit()  # Commit this row's changes
+
+                except Exception as task_error:
+                    # Log specific error for this task
+                    error_message = f"Fila {index + 1}, Código {task_data['code']}: {str(task_error)}"
+                    logger.error(error_message)
+                    error_task_codes.append(task_data["code"])
+                    current_session.rollback()  # Rollback changes for this row only
+                    continue
+
+            except Exception as row_error:
+                # Handle any other errors in row processing
+                error_message = f"Error procesando fila {index + 1}: {str(row_error)}"
+                logger.error(error_message)
+                error_task_codes.append(f"Fila {index + 1}")
+                current_session.rollback()
+                continue
+
+        # Save error codes to file
         if error_task_codes:
-            error_file_path = "task_import_errors.txt"
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            error_file_path = f"task_import_errors_{timestamp}.txt"
             with open(error_file_path, "w") as f:
-                f.write("\n".join(error_task_codes))
-            print(f"Códigos de tareas con errores guardados en {error_file_path}")
+                f.write(
+                    "\n".join(
+                        [f"{code}: Error al procesar" for code in error_task_codes]
+                    )
+                )
+            logger.info(f"Códigos de tareas con errores guardados en {error_file_path}")
 
         return JSONResponse(
-            {
+            content={
                 "code": 200,
-                "message": f"Datos importados. {len(updated_tasks)} tareas procesadas correctamente. {len(error_task_codes)} tareas con errores.",
+                "message": f"Importación completada. {len(updated_tasks)} tareas procesadas correctamente. {len(error_task_codes)} tareas con errores.",
                 "successful_tasks": len(updated_tasks),
                 "failed_tasks": len(error_task_codes),
+                "total_rows_processed": len(df),
+                "error_file": error_file_path if error_task_codes else None,
             }
         )
 
     except Exception as global_error:
-        db.rollback()
-        logger.error(global_error)
-        raise HTTPException(
-            status_code=400,
-            detail=f"Error global al importar los datos: {str(global_error)}",
+        logger.error(f"Error general en el proceso de importación: {str(global_error)}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": "Error general en el proceso de importación",
+                "detail": str(global_error),
+                "successful_tasks": len(updated_tasks),
+                "failed_tasks": len(error_task_codes),
+                "total_rows_processed": len(updated_tasks) + len(error_task_codes),
+            },
         )
 
 
 # TODO:: IMPORTAR CRUDO
-@task.post("/import-crudo/")
-async def import_crudo_data(form: TaskCrudoImport, db: Session = Depends(get_db)):
-    try:
-        crudo_data = form.tasks
-        updated_tasks = []
-        tasknot_found = []
-
-        for crudo in crudo_data:
-            task = db.query(Task).filter(Task.code == crudo.code).first()
-
-            if not task:
-                print(f"Tarea {crudo.code} no encontrada.")
-                tasknot_found.append(crudo.code)
-                logger.error(f"Crudo no encontrado {tasknot_found}")
-                continue
-
-            # Only update fields that are not None or empty
-            if crudo.root_cause is not None and crudo.root_cause.strip():
-                task.root_cause = crudo.root_cause
-
-            if crudo.attributable is not None and crudo.attributable.strip():
-                task.attributable = crudo.attributable
-
-            if (
-                crudo.resolutioncategory_2ps is not None
-                and crudo.resolutioncategory_2ps.strip()
-            ):
-                task.resolutioncategory_2ps = crudo.resolutioncategory_2ps
-
-            if crudo.customer_waiting is not None and crudo.customer_waiting.strip():
-                task.customer_waiting = crudo.customer_waiting
-
-            if crudo.service_type is not None and crudo.service_type.strip():
-                task.service_type = crudo.service_type
-
-            db.add(task)
-            db.commit()
-            db.refresh(task)
-            updated_tasks.append(task)
-
-        return JSONResponse(
-            {
-                "code": 200,
-                "message": f"Datos importados. {len(updated_tasks)} tareas procesadas correctamente.",
-                "successful_tasks": len(updated_tasks),
-            }
-        )
-
-    except Exception as global_error:
-        db.rollback()
-        logger.error(global_error)
-        raise HTTPException(
-            status_code=400,
-            detail=f"Error global al importar los datos del CRUDO: {str(global_error)}",
-        )
 
 
 def parse_time_value(value):
@@ -258,8 +322,8 @@ def parse_time_value(value):
     return None
 
 
-@task.post("/upload-excel")
-async def upload_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
+@task.post("/upload-crudo/")
+async def upload_crudo(file: UploadFile = File(...), db: Session = Depends(get_db)):
     try:
         contents = await file.read()
         excel_data = BytesIO(contents)

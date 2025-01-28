@@ -39,6 +39,7 @@ def create_task(form: TaskCreate, db: Session = Depends(get_db)):
 
     return task
 
+
 def convert_string_to_time(time_str):
     """
     Convierte un string de tiempo a objeto time.
@@ -61,6 +62,43 @@ def convert_string_to_time(time_str):
         raise ValueError(f"No se pudo convertir el tiempo: {time_str}")
     except Exception as e:
         logger.error(f"Error convirtiendo tiempo {time_str}: {str(e)}")
+        return None
+
+
+def convert_date_format(date_value):
+    """
+    Convierte la fecha al formato esperado por PostgreSQL (YYYY-MM-DD HH:MM:SS)
+    """
+    if pd.isna(date_value):
+        return None
+
+    try:
+        # Si ya es datetime, solo formatear
+        if isinstance(date_value, datetime):
+            return date_value.strftime("%Y-%m-%d %H:%M:%S")
+
+        # Si es string, intentar diferentes formatos
+        formats_to_try = [
+            "%d/%m/%Y %H:%M:%S",
+            "%d/%m/%Y %H:%M",
+            "%d-%m-%Y %H:%M:%S",
+            "%d-%m-%Y %H:%M",
+            "%d/%m/%y %H:%M:%S",
+            "%d/%m/%y %H:%M",
+        ]
+
+        date_str = str(date_value).strip()
+
+        for fmt in formats_to_try:
+            try:
+                parsed_date = datetime.strptime(date_str, fmt)
+                return parsed_date.strftime("%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                continue
+
+        raise ValueError(f"No se pudo convertir la fecha: {date_value}")
+    except Exception as e:
+        logger.error(f"Error convirtiendo fecha {date_value}: {str(e)}")
         return None
 
 
@@ -155,9 +193,7 @@ async def upload_task_excel(
                 # Process datetime columns
                 for col in datetime_columns:
                     try:
-                        processed_data[col] = (
-                            pd.to_datetime(row[col]) if pd.notna(row[col]) else None
-                        )
+                        processed_data[col] = convert_date_format(row[col])
                     except Exception as e:
                         logger.error(
                             f"Error procesando columna {col} en fila {index + 1}: {str(e)}"

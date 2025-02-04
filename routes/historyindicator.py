@@ -1,9 +1,10 @@
 import math
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import case
+from sqlalchemy import case, extract
 from sqlalchemy.orm import Session
 
 # from config.db import get_db
+from decimal import Decimal, ROUND_CEILING
 
 from fastapi.responses import JSONResponse
 from loguru import logger
@@ -32,7 +33,7 @@ kpi = APIRouter(
 
 
 # TODO:: Calcula los KPIs utilizando consultas a los modelos Estimated y Task
-def calcular_kpis_calculados(db: Session, month: str, service_type: str):
+def calcular_kpis_calculados(db: Session, year: int, month: str, service_type: str):
 
     task_summary = (
         db.query(
@@ -49,6 +50,7 @@ def calcular_kpis_calculados(db: Session, month: str, service_type: str):
         )
         .join(Estimated, Task.id == Estimated.task_id)
         .filter(Estimated.monthh == month, Task.service_type == service_type)
+        .filter(extract("year", Task.date_delivery_time) == year)
         .all()
     )
 
@@ -93,6 +95,7 @@ def calcular_kpis_calculados(db: Session, month: str, service_type: str):
         if task.vr == "RECURRENTE" and task.catv_test is not None
     )
     vr_rate = 1 - (vr_recurrente / vr_total if vr_total > 0 else 0)
+    vr_percentage = vr_rate * 100
 
     # TODO:: Cálculo de ESI (Eventos sin Incidencia)
     esi_total = sum(
@@ -108,6 +111,7 @@ def calcular_kpis_calculados(db: Session, month: str, service_type: str):
         and task.esi_catv_test.replace("-", "").isdigit()
     )
     esi_rate = 1 - (esi_reincidente / esi_total if esi_total > 0 else 0)
+    esi_percentage = esi_rate * 100
 
     # TODO:: ES
     cumple_count = sum(1 for task in task_summary if task.ts == "CUMPLE")
@@ -129,8 +133,8 @@ def calcular_kpis_calculados(db: Session, month: str, service_type: str):
             etl_rate
             + etr_rate
             + 0  # TS inicialmente es NULL
-            + vr_rate
-            + esi_rate
+            + vr_percentage
+            + esi_percentage
             + 100
             + 96
             + 100
@@ -138,28 +142,29 @@ def calcular_kpis_calculados(db: Session, month: str, service_type: str):
         )
 
     elif service_type == "ASG_CUM_03":
-        total_calculado = vr_rate + esi_rate + 100 + 96
+        total_calculado = vr_percentage + esi_percentage + 100 + 96
 
     else:
         total_calculado = (
             etl_rate
             + etr_rate
             + 0  # TS inicialmente es NULL
-            + vr_rate
-            + esi_rate
+            + vr_percentage
+            + esi_percentage
             + 100
             + 96
             + es_rate
         )
 
     return {
+        "year": year,
         "month": month,
         "service_type_name": service_type,
         "etl": etl_rate,
         "etr": etr_rate,
         "ts": None,
-        "vr": vr_rate,
-        "esi": esi_rate,
+        "vr": vr_percentage,
+        "esi": esi_percentage,
         "efo": 100,
         "cd": 96,
         "etci": 100,
@@ -182,6 +187,7 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
         db_exist = (
             db.query(HistoryIndicator)
             .filter(
+                HistoryIndicator.year == request.year,
                 HistoryIndicator.month == request.month,
                 HistoryIndicator.service_type_name == request.service_type,
             )
@@ -202,6 +208,7 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
 
         # TODO::1. Fila de DATOS INGRESADOS
         datos_ingresados = HistoryIndicator(
+            year=request.year,
             month=request.month,
             service_type_name=request.service_type,
             typei=TypeIHistoryEnum.registered.value,
@@ -211,7 +218,7 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
 
         # TODO::2. Fila de DATOS CALCULADOS
         kpis_calculados = calcular_kpis_calculados(
-            db, request.month, request.service_type
+            db, request.year, request.month, request.service_type
         )
         datos_calculados = HistoryIndicator(
             **kpis_calculados, typei=TypeIHistoryEnum.indicator.value
@@ -237,7 +244,7 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
                             merged_data.get("ESI", 0), kpis_calculados["esi"]
                         ),
                         calculate_percentage(merged_data.get("EFO", 0), 100),
-                        calculate_percentage(merged_data.get("CD", 0), 95),
+                        calculate_percentage(merged_data.get("CD", 0), 96),
                         calculate_percentage(merged_data.get("ETCI", 0), 100),
                         calculate_percentage(
                             merged_data.get("ES", 0), kpis_calculados["es"]
@@ -247,6 +254,7 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
             )
         # TODO::3. Fila de RESULTADO (multiplicación)
         datos_resultado = HistoryIndicator(
+            year=request.year,
             month=request.month,
             service_type_name=request.service_type,
             etl=round(
@@ -263,7 +271,7 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
             ),
             esi=calculate_percentage(merged_data.get("ESI", 0), kpis_calculados["esi"]),
             efo=calculate_percentage(merged_data.get("EFO", 0), 100),
-            cd=calculate_percentage(merged_data.get("CD", 0), 95),
+            cd=round(calculate_percentage(merged_data.get("CD", 0), 96)),
             etci=calculate_percentage(merged_data.get("ETCI", 0), 100),
             es=round(
                 calculate_percentage(merged_data.get("ES", 0), kpis_calculados["es"]), 2
@@ -323,16 +331,11 @@ def search_history(request: RequestSearchHistory, db: Session = Depends(get_db))
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@kpi.post("/search/allhistory")
-def search_all_history(request: RequestSearchHistory, db: Session = Depends(get_db)):
+@kpi.get("/search/allhistory")
+def search_all_history(db: Session = Depends(get_db)):
 
     try:
-        kpis = (
-            db.query(HistoryIndicator)
-            .filter(HistoryIndicator.month == request.month)
-            .filter(HistoryIndicator.service_type_name == request.serviceType)
-            .all()
-        )
+        kpis = db.query(HistoryIndicator).filter(HistoryIndicator.month == 12).all()
 
         if not kpis:
             raise HTTPException(status_code=404, detail="Indicadores no encontrados")

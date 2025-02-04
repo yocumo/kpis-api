@@ -442,3 +442,125 @@ async def upload_crudo(file: UploadFile = File(...), db: Session = Depends(get_d
     except Exception as e:
         logger.error(f"Error general procesando archivo: {str(e)}")
         return {"error": str(e), "status": "error"}
+
+
+# TODO:: ACTUALIZAR LOS TIEMPOS MUERTOS
+
+
+def parse_time_value_times(value):
+    """
+    Convierte diferentes formatos de tiempo a time without timezone
+    """
+    if pd.isna(value):
+        return None
+
+    try:
+        # Si es un string, intentar diferentes formatos
+        if isinstance(value, str):
+            # Intentar formato "hh:mm:ss"
+            try:
+                t = datetime.strptime(value, "%H:%M:%S").time()
+                return t
+            except ValueError:
+                pass
+
+            # Intentar formato "hh:mm"
+            try:
+                t = datetime.strptime(value, "%H:%M").time()
+                return t
+            except ValueError:
+                pass
+
+            # Intentar formato "h:mm:ss"
+            try:
+                t = datetime.strptime(value, "%I:%M:%S").time()
+                return t
+            except ValueError:
+                pass
+
+            # Intentar formato "h:mm"
+            try:
+                t = datetime.strptime(value, "%I:%M").time()
+                return t
+            except ValueError:
+                pass
+
+        # Si es datetime
+        elif isinstance(value, datetime):
+            return value.time()
+
+        # Si es time
+        elif isinstance(value, time):
+            return value
+
+    except Exception as e:
+        logger.error(f"Error parseando tiempo: {value}, error: {str(e)}")
+        return None
+
+    return None
+
+
+@task.post("/update-deadtimes/")
+async def update_dead_time(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    try:
+        contents = await file.read()
+        excel_data = BytesIO(contents)
+        df = pd.read_excel(excel_data)
+
+        required_columns = [
+            "code",
+            "arrival_dead_time",
+            "execution_dead_time",
+        ]
+
+        if not all(col in df.columns for col in required_columns):
+            return {"error": "Columnas requeridas faltantes en el Excel"}
+
+        successful_updates = 0
+        failed_updates = 0
+
+        for index, row in df.iterrows():
+            try:
+                task = db.query(Task).filter(Task.code == row["code"]).first()
+
+                if task:
+                    arrival_dead_time = parse_time_value_times(row["arrival_dead_time"])
+                    execution_dead_time = parse_time_value_times(
+                        row["execution_dead_time"]
+                    )
+
+                    task.arrival_dead_time = arrival_dead_time
+                    task.execution_dead_time = execution_dead_time
+
+                    try:
+                        db.commit()
+                        successful_updates += 1
+                    except Exception as commit_error:
+                        db.rollback()
+                        raise commit_error
+                else:
+                    failed_updates += 1
+                    print(
+                        f"No se encontró la tarea con código: {row['code']} (fila {index + 1})"
+                    )
+
+            except Exception as e:
+                failed_updates += 1
+                db.rollback()
+                logger.error(
+                    f"Error actualizando fila {index + 1}, code: {row['code']}: {str(e)}"
+                )
+                continue
+
+        return JSONResponse(
+            {
+                "code": 200,
+                "successful_tasks": successful_updates,
+                "failed_updates": failed_updates,
+                "total_rows_processed": len(df),
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error general procesando archivo UPDATE DEAD TIMES: {str(e)}")
+        return {"error": str(e), "status": "error"}

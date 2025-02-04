@@ -55,6 +55,8 @@ class Task(TimestampMixin, Base):
     resolutioncategory_2ps = Column(String, nullable=True, default="")
     customer_waiting = Column(Time, nullable=True)
 
+    estimated = relationship("Estimated", back_populates="task", uselist=False)
+
 
 class TaskCreate(BaseModel):
     documenter: Optional[str] = None
@@ -178,4 +180,8 @@ class Estimated(TimestampMixin, Base):
     dead_time = Column(Float)
     one_fifty = Column(Float, nullable=True)
 
-    task = relationship("Task", backref="estimated", foreign_keys=[task_id])
+    # task = relationship(
+    #     "Task", backref="estimated", foreign_keys=[task_id],
+    # )
+
+    task = relationship("Task", back_populates="estimated")

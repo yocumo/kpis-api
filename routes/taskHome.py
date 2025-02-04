@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 import os
 import sys
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import joinedload
 
 # from requests import Session
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -13,7 +14,7 @@ from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 from loguru import logger
 
-from models.task import Task, TaskCreate, TaskImport
+from models.task import Estimated, Task, TaskCreate, TaskImport
 from datetime import datetime, time
 
 task_home = APIRouter(
@@ -37,7 +38,12 @@ def find_by_code(code: str, db: Session = Depends(get_db)):
 
 def find_task_by_code(code: str, db: Session = Depends(get_db)):
 
-    task = db.query(Task).filter(Task.code == code).first()
+    task = (
+        db.query(Task)
+        .options(joinedload(Task.estimated))
+        .filter(Task.code == code)
+        .first()
+    )
 
     if not task:
         raise HTTPException(status_code=404, detail="Tarea no encontrada")

@@ -25,7 +25,7 @@ class HistoryIndicator(TimestampMixin, Base):
     efo = Column(Float, nullable=True)
     cd = Column(Float, nullable=True)
     month = Column(Integer, nullable=True)
-    year = Column(String, nullable=True)
+    year = Column(Integer, nullable=True)
     total = Column(Float, nullable=True)
     typei = Column(String, nullable=True)
     service_type_name = Column(String, nullable=True)
@@ -34,6 +34,7 @@ class HistoryIndicator(TimestampMixin, Base):
 class KPICalculationRequest(BaseModel):
     service_type: str
     month: int
+    year: Optional[int]
     data: Optional[List[Dict[str, Union[float, str]]]]
 
     class Config:

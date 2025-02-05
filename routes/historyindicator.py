@@ -4,7 +4,7 @@ from sqlalchemy import case, extract
 from sqlalchemy.orm import Session
 
 # from config.db import get_db
-from decimal import Decimal, ROUND_CEILING
+from decimal import ROUND_DOWN, Decimal, ROUND_CEILING
 
 from fastapi.responses import JSONResponse
 from loguru import logger
@@ -32,7 +32,7 @@ kpi = APIRouter(
 )
 
 
-# TODO:: Calcula los KPIs utilizando consultas a los modelos Estimated y Task
+# TODO:: Calcula los KPIs - Estimated y Task
 def calcular_kpis_calculados(db: Session, year: int, month: str, service_type: str):
 
     task_summary = (
@@ -68,9 +68,7 @@ def calcular_kpis_calculados(db: Session, year: int, month: str, service_type: s
         and task.compliance_etl_etr == "CUMPLE"
     )
 
-    etl_rate = round((etl_cumple / etl_total * 100) if etl_total > 0 else 0, 2)
-
-    # print("etl_rate", etl_total, etl_cumple, etl_rate)
+    etl_rate = round(((etl_cumple / etl_total) * 100) if etl_total > 0 else 0, 2)
 
     # TODO:: Cálculo de ETR (Tiempo de Respuesta)
     etr_total = sum(
@@ -85,7 +83,8 @@ def calcular_kpis_calculados(db: Session, year: int, month: str, service_type: s
         and task.request_activity == "INMEDIATA"
         and task.compliance_etl_etr == "CUMPLE"
     )
-    etr_rate = round((etr_cumple / etr_total * 100) if etr_total > 0 else 0)
+    etrrate = (etr_cumple / etr_total) if etr_total > 0 else 0
+    etr_rate = round((etrrate * 100), 2)
 
     # TODO::Cálculo de VR (Visitas Recurrentes)
     vr_total = sum(1 for task in task_summary if task.catv_test is not None)
@@ -95,8 +94,7 @@ def calcular_kpis_calculados(db: Session, year: int, month: str, service_type: s
         if task.vr == "RECURRENTE" and task.catv_test is not None
     )
     vr_rate = 1 - (vr_recurrente / vr_total if vr_total > 0 else 0)
-    vr_percentage = vr_rate * 100
-
+    vr_percentage = round((vr_rate * 100), 2)
     # TODO:: Cálculo de ESI (Eventos sin Incidencia)
     esi_total = sum(
         1
@@ -125,36 +123,6 @@ def calcular_kpis_calculados(db: Session, year: int, month: str, service_type: s
         if total_count > 0 and cumple__nocumple_count > 0
         else 0
     )
-
-    # TODO: TOTAL
-    if service_type == "ASG_CUM_01":
-
-        total_calculado = (
-            etl_rate
-            + etr_rate
-            + 0  # TS inicialmente es NULL
-            + vr_percentage
-            + esi_percentage
-            + 100
-            + 96
-            + 100
-            + es_rate
-        )
-
-    elif service_type == "ASG_CUM_03":
-        total_calculado = vr_percentage + esi_percentage + 100 + 96
-
-    else:
-        total_calculado = (
-            etl_rate
-            + etr_rate
-            + 0  # TS inicialmente es NULL
-            + vr_percentage
-            + esi_percentage
-            + 100
-            + 96
-            + es_rate
-        )
 
     return {
         "year": year,
@@ -227,56 +195,75 @@ def calculate_kpis(request: KPICalculationRequest, db: Session = Depends(get_db)
 
         total = 0
         if TypeIHistoryEnum.calculated.value == "calculated":
-            total = math.ceil(
-                sum(
-                    [
-                        calculate_percentage(
-                            merged_data.get("ETL", 0), kpis_calculados["etl"]
-                        ),
-                        calculate_percentage(
-                            merged_data.get("ETR", 0), kpis_calculados["etr"]
-                        ),
-                        0,
-                        calculate_percentage(
-                            merged_data.get("VR", 0), kpis_calculados["vr"]
-                        ),
-                        calculate_percentage(
-                            merged_data.get("ESI", 0), kpis_calculados["esi"]
-                        ),
-                        calculate_percentage(merged_data.get("EFO", 0), 100),
-                        calculate_percentage(merged_data.get("CD", 0), 96),
-                        calculate_percentage(merged_data.get("ETCI", 0), 100),
-                        calculate_percentage(
-                            merged_data.get("ES", 0), kpis_calculados["es"]
-                        ),
-                    ]
-                )
+            total = sum(
+                [
+                    calculate_percentage(
+                        merged_data.get("ETL", 0), kpis_calculados["etl"]
+                    ),
+                    calculate_percentage(
+                        merged_data.get("ETR", 0), kpis_calculados["etr"]
+                    ),
+                    0,
+                    calculate_percentage(
+                        merged_data.get("VR", 0), kpis_calculados["vr"]
+                    ),
+                    calculate_percentage(
+                        merged_data.get("ESI", 0), kpis_calculados["esi"]
+                    ),
+                    calculate_percentage(merged_data.get("EFO", 0), 100),
+                    calculate_percentage(merged_data.get("CD", 0), 96),
+                    calculate_percentage(merged_data.get("ETCI", 0), 100),
+                    calculate_percentage(
+                        merged_data.get("ES", 0), kpis_calculados["es"]
+                    ),
+                ]
             )
+
         # TODO::3. Fila de RESULTADO (multiplicación)
         datos_resultado = HistoryIndicator(
             year=request.year,
             month=request.month,
             service_type_name=request.service_type,
-            etl=round(
-                calculate_percentage(merged_data.get("ETL", 0), kpis_calculados["etl"]),
-                2,
-            ),
-            etr=round(
-                calculate_percentage(merged_data.get("ETR", 0), kpis_calculados["etr"]),
-                2,
-            ),
+            etl=Decimal(
+                str(
+                    calculate_percentage(
+                        merged_data.get("ETL", 0), kpis_calculados["etl"]
+                    )
+                )
+            ).quantize(Decimal("0.01"), rounding=ROUND_DOWN),
+            etr=Decimal(
+                str(
+                    calculate_percentage(
+                        merged_data.get("ETR", 0), kpis_calculados["etr"]
+                    )
+                )
+            ).quantize(Decimal("0.01"), rounding=ROUND_DOWN),
             ts=0,
-            vr=round(
-                calculate_percentage(merged_data.get("VR", 0), kpis_calculados["vr"]), 2
-            ),
-            esi=calculate_percentage(merged_data.get("ESI", 0), kpis_calculados["esi"]),
+            vr=Decimal(
+                str(
+                    calculate_percentage(
+                        merged_data.get("VR", 0), kpis_calculados["vr"]
+                    )
+                )
+            ).quantize(Decimal("0.01"), rounding=ROUND_DOWN),
+            esi=Decimal(
+                str(
+                    calculate_percentage(
+                        merged_data.get("ESI", 0), kpis_calculados["esi"]
+                    )
+                )
+            ).quantize(Decimal("0.01"), rounding=ROUND_DOWN),
             efo=calculate_percentage(merged_data.get("EFO", 0), 100),
-            cd=round(calculate_percentage(merged_data.get("CD", 0), 96)),
+            cd=calculate_percentage(merged_data.get("CD", 0), 96),
             etci=calculate_percentage(merged_data.get("ETCI", 0), 100),
-            es=round(
-                calculate_percentage(merged_data.get("ES", 0), kpis_calculados["es"]), 2
-            ),
-            total=total,
+            es=Decimal(
+                str(
+                    calculate_percentage(
+                        merged_data.get("ES", 0), kpis_calculados["es"]
+                    )
+                )
+            ).quantize(Decimal("0.01"), rounding=ROUND_DOWN),
+            total=Decimal(str(total)).quantize(Decimal("0.01"), rounding=ROUND_DOWN),
             typei=TypeIHistoryEnum.calculated.value,
         )
 
@@ -301,23 +288,25 @@ def find_all_kpis(db: Session = Depends(get_db)):
     return kpis
 
 
-@kpi.get("/december_asg")
-def find_all_kpis_indicator(db: Session = Depends(get_db)):
-    kpis = (
-        db.query(HistoryIndicator)
-        .filter(HistoryIndicator.typei == TypeIHistoryEnum.indicator.value)
-        .all()
-    )
-    return kpis
+# @kpi.get("/december_asg")
+# def find_all_kpis_indicator(db: Session = Depends(get_db)):
+#     kpis = (
+#         db.query(HistoryIndicator)
+#         .filter(HistoryIndicator.typei == TypeIHistoryEnum.indicator.value)
+#         .all()
+#     )
+#     return kpis
 
 
-@kpi.post("/search/history")
-def search_history(request: RequestSearchHistory, db: Session = Depends(get_db)):
+## TODO:: consultar historial
+@kpi.post("/search-history")
+def filter_history(request: RequestSearchHistory, db: Session = Depends(get_db)):
 
     try:
         kpis = (
             db.query(HistoryIndicator)
-            .filter(HistoryIndicator.typei == TypeIHistoryEnum.indicator.value)
+            # .filter(HistoryIndicator.typei == TypeIHistoryEnum.indicator.value)
+            .filter(HistoryIndicator.year == request.year)
             .filter(HistoryIndicator.month == request.month)
             .filter(HistoryIndicator.service_type_name == request.serviceType)
             .all()
@@ -331,6 +320,7 @@ def search_history(request: RequestSearchHistory, db: Session = Depends(get_db))
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# TODO:: Solo diciembre 2024
 @kpi.get("/search/allhistory")
 def search_all_history(db: Session = Depends(get_db)):
 
@@ -345,7 +335,7 @@ def search_all_history(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@kpi.post("/delete/allhistory")
+@kpi.post("/delete-history")
 def delete_all_history(request: RequestSearchHistory, db: Session = Depends(get_db)):
     try:
         deleted_rows = (

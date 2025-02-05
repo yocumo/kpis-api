@@ -9,7 +9,6 @@ from models.mixins import TimestampMixin
 from fastapi_utils.guid_type import GUID, GUID_SERVER_DEFAULT_POSTGRESQL
 
 
-
 class HistoryIndicator(TimestampMixin, Base):
     __tablename__ = "history_indicators"
 
@@ -57,4 +56,5 @@ class OperationalCategoryCreate(BaseModel):
 
 class RequestSearchHistory(BaseModel):
     month: int
+    year: int
     serviceType: str

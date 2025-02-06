@@ -5,6 +5,7 @@ class RoleEnum(Enum):
     guest = "guest"
     admin = "admin"
     superadmin = "superadmin"
+    agentetb = "agentetb"
     
 
 class StatuEnum(Enum):

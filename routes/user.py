@@ -108,7 +108,7 @@ def delete_user(id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Error al eliminar el usuario")
 
 
-@user.put("/{id}")
+@user.patch("/{id}")
 async def update_user(id: str, user: UserUpdate, db: Session = Depends(get_db)):
     try:
         user_db = db.query(User).filter(User.id == id).first()
@@ -171,9 +171,6 @@ def get_profile(id: str, db: Session = Depends(get_db)):
 
     except:
         return {"error": "Error al obtener el perfil"}
-
-
-
 
 
 def getRole(name: str):

@@ -25,8 +25,8 @@ class UserCreate(BaseModel):
     dni: str = Field(None, description="Unique identifier")
     name: str
     email: str
-    phone: str
-    role: RoleEnum = Field(default=RoleEnum.admin)
+    phone: Optional[str] = None
+    role: RoleEnum = Field(default=RoleEnum.guest)
     statu: StatuEnum = Field(default=StatuEnum.active)
     password: str
 
@@ -45,7 +45,7 @@ class UserResponse(BaseModel):
     name: str
     dni: str
     email: Optional[str] = None
-    phone: Optional[str] = None 
+    phone: Optional[str] = None
     role: RoleEnum
     statu: StatuEnum
 

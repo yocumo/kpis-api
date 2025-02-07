@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends, Request, requests
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -67,7 +68,7 @@ async def login(form_data: authUser, request: Request, db: Session = Depends(get
 
     # Generar refresh token
     refresh_token_expires = timedelta(minutes=REFRESH_TOKEN_EXPIRE_DAYS)
-   
+
     user_response = {
         "id": user.id,
         "name": user.name,
@@ -135,9 +136,7 @@ async def verify_token(
         "statu": user.statu,
     }
 
-
     return {"user": user_response, "token": access_token}
-
 
 
 ## TODO: LOGIN RECORDS
@@ -189,3 +188,17 @@ def get_all_login_records(db: Session = Depends(get_db)):
         return result
     except Exception as e:
         print(f"Error al obtener los registros de login: {str(e)}")
+
+
+@auth.delete("/access-delete")
+def delete_access(db: Session = Depends(get_db)):
+    try:
+
+        db.query(LoginRecord).delete()
+        db.commit()
+
+        return JSONResponse(
+            {"code": 200, "message": "Historial de Accesos eliminado exitosamente!"}
+        )
+    except Exception as e:
+        print(f"Error al eliminar el acceso: {str(e)}")

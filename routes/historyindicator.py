@@ -287,17 +287,6 @@ def find_all_kpis(db: Session = Depends(get_db)):
     kpis = db.query(HistoryIndicator).all()
     return kpis
 
-
-# @kpi.get("/december_asg")
-# def find_all_kpis_indicator(db: Session = Depends(get_db)):
-#     kpis = (
-#         db.query(HistoryIndicator)
-#         .filter(HistoryIndicator.typei == TypeIHistoryEnum.indicator.value)
-#         .all()
-#     )
-#     return kpis
-
-
 ## TODO:: consultar historial
 @kpi.post("/search-history")
 def filter_history(request: RequestSearchHistory, db: Session = Depends(get_db)):

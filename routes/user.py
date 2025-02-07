@@ -149,28 +149,28 @@ def search_user_by_id(db: Session, id: str):
 
 
 
-@user.get("/profile/{id}")
-def get_profile(id: str, db: Session = Depends(get_db)):
+# @user.get("/profile/{id}")
+# def get_profile(id: str, db: Session = Depends(get_db)):
 
-    try:
-        user = db.query(User).filter(User.id == id).first()
+#     try:
+#         user = db.query(User).filter(User.id == id).first()
 
-        if user is None:
-            return {"error": "Usuario no encontrado"}
+#         if user is None:
+#             return {"error": "Usuario no encontrado"}
 
-        return JSONResponse(
-            {
-                "name": user.name,
-                "dni": user.dni,
-                "email": user.email,
-                "role": getRole(user.role.value),
-                "statu": "Activo" if user.statu.value == "active" else "Inactivo",
-                "phone": user.phone,
-            }
-        )
+#         return JSONResponse(
+#             {
+#                 "name": user.name,
+#                 "dni": user.dni,
+#                 "email": user.email,
+#                 "role": getRole(user.role.value),
+#                 "statu": "Activo" if user.statu.value == "active" else "Inactivo",
+#                 "phone": user.phone,
+#             }
+#         )
 
-    except:
-        return {"error": "Error al obtener el perfil"}
+#     except:
+#         return {"error": "Error al obtener el perfil"}
 
 
 def getRole(name: str):

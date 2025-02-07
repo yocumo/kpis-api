@@ -1,6 +1,7 @@
 from ast import parse
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
+import json
 import os
 import sys
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -22,6 +23,8 @@ task = APIRouter(
     prefix="/api/tasks", tags=["Tareas"], responses={404: {"msg": "No encontrado"}}
 )
 
+ERROR_FILE_PATH = "task_import_errors.txt"
+
 
 @task.get("/")
 def find_all(db: Session = Depends(get_db)):
@@ -30,14 +33,14 @@ def find_all(db: Session = Depends(get_db)):
     return tasks
 
 
-@task.post("/")
-def create_task(form: TaskCreate, db: Session = Depends(get_db)):
-    task = Task(**form.dict())
-    db.add(task)
-    db.commit()
-    db.refresh(task)
+# @task.post("/")
+# def create_task(form: TaskCreate, db: Session = Depends(get_db)):
+#     task = Task(**form.dict())
+#     db.add(task)
+#     db.commit()
+#     db.refresh(task)
 
-    return task
+#     return task
 
 
 def convert_string_to_time(time_str):
@@ -274,15 +277,13 @@ async def upload_task_excel(
 
         # Save error codes to file
         if error_task_codes:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            error_file_path = f"task_import_errors_{timestamp}.txt"
-            with open(error_file_path, "w") as f:
-                f.write(
-                    "\n".join(
-                        [f"{code}: Error al procesar" for code in error_task_codes]
-                    )
-                )
-            logger.info(f"Códigos de tareas con errores guardados en {error_file_path}")
+            error_details = {
+                "timestamp": datetime.now().strftime("%Y%m%d_%H%M%S"),
+                "errors": {code: "Error al procesar" for code in error_task_codes},
+            }
+
+            with open(ERROR_FILE_PATH, "w") as f:
+                json.dump(error_details, f, indent=2, ensure_ascii=False)
 
         return JSONResponse(
             content={
@@ -291,7 +292,9 @@ async def upload_task_excel(
                 "successful_tasks": len(updated_tasks),
                 "failed_tasks": len(error_task_codes),
                 "total_rows_processed": len(df),
-                "error_file": error_file_path if error_task_codes else None,
+                "error_file": (
+                    json.load(open(ERROR_FILE_PATH)) if error_task_codes else None
+                ),
             }
         )
 
@@ -379,6 +382,7 @@ async def upload_crudo(file: UploadFile = File(...), db: Session = Depends(get_d
 
         successful_updates = 0
         failed_updates = 0
+        error_task_notfound = []
 
         for index, row in df.iterrows():
             try:
@@ -414,11 +418,9 @@ async def upload_crudo(file: UploadFile = File(...), db: Session = Depends(get_d
                         db.rollback()
                         raise commit_error
                 else:
+                    error_task_notfound.append(row["code"])
                     failed_updates += 1
-                    print(
-                        f"No se encontró la tarea con código: {row['code']} (fila {index + 1})"
-                    )
-                    # logger.error(
+                    # print(
                     #     f"No se encontró la tarea con código: {row['code']} (fila {index + 1})"
                     # )
 
@@ -430,12 +432,28 @@ async def upload_crudo(file: UploadFile = File(...), db: Session = Depends(get_d
                 )
                 continue
 
+        # Save not found task codes to file
+        if error_task_notfound:
+            ERROR_FILE_PATH = "task_not_found_errors.txt"
+            error_details = {
+                "timestamp": datetime.now().strftime("%Y%m%d_%H%M%S"),
+                "errors": [code for code in error_task_notfound],
+            }
+
+            with open(ERROR_FILE_PATH, "w") as f:
+                json.dump(error_details, f, indent=2, ensure_ascii=False)
+
+            # logger.info(f"Códigos de tareas no encontradas guardados en {ERROR_FILE_PATH}")
+
         return JSONResponse(
             {
                 "code": 200,
                 "successful_tasks": successful_updates,
                 "failed_updates": failed_updates,
                 "total_rows_processed": len(df),
+                "error_file": (
+                    json.load(open(ERROR_FILE_PATH)) if error_task_notfound else None
+                ),
             }
         )
 

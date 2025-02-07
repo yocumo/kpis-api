@@ -287,6 +287,7 @@ def find_all_kpis(db: Session = Depends(get_db)):
     kpis = db.query(HistoryIndicator).all()
     return kpis
 
+
 ## TODO:: consultar historial
 @kpi.post("/search-history")
 def filter_history(request: RequestSearchHistory, db: Session = Depends(get_db)):
@@ -314,7 +315,12 @@ def filter_history(request: RequestSearchHistory, db: Session = Depends(get_db))
 def search_all_history(db: Session = Depends(get_db)):
 
     try:
-        kpis = db.query(HistoryIndicator).filter(HistoryIndicator.month == 12).all()
+        kpis = (
+            db.query(HistoryIndicator)
+            .filter(HistoryIndicator.month == 12)
+            .filter(HistoryIndicator.year == 2024)
+            .all()
+        )
 
         if not kpis:
             raise HTTPException(status_code=404, detail="Indicadores no encontrados")

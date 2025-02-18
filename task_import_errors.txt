@@ -1,0 +1,6 @@
+{
+  "timestamp": "20250207_142126",
+  "errors": {
+    "TAS000000630976": "Error al procesar"
+  }
+}

@@ -1,6 +1,11 @@
 {
-  "timestamp": "20250207_142126",
+  "timestamp": "20250227_112306",
   "errors": {
-    "TAS000000630976": "Error al procesar"
+    "Fila 3052: Código vacío": "Error al procesar",
+    "TAS000000661762": "Error al procesar",
+    "TAS000000663072": "Error al procesar",
+    "Fila 4113: Código vacío": "Error al procesar",
+    "Fila 4114: Código vacío": "Error al procesar",
+    "Fila 4115: Código vacío": "Error al procesar"
   }
 }

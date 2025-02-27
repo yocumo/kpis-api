@@ -12,8 +12,8 @@ DECLARE
     confirmation_waiting_time interval;
     total_time_interval interval;
     total_time_minutes integer;
-	day_week integer;
-	dead_time numeric;
+    day_week integer;
+    dead_time numeric;
     dayy integer;
     monthh integer;
     time_int numeric;
@@ -36,54 +36,56 @@ DECLARE
     catv_count integer;
 BEGIN
     -- Obtenemos los minutos para actividad PROGRAMADA
-    SELECT extract(hour from minut) * 60 + extract(minute from minut)
+    SELECT 15
     INTO programada_minutes
     FROM exceptions_activity
-    WHERE activity = 'PROGRAMADA';
-    
+    WHERE activity = 'PROGRAMADA'
+    LIMIT 1;
+
     -- Obtenemos los minutos para actividad INMEDIATA
     SELECT extract(hour from minut) * 60 + extract(minute from minut)
     INTO inmediata_minutes
     FROM exceptions_activity
     WHERE activity = 'INMEDIATA';
-    
-    --TODO:: Aplicamos la lógica del IF de Excel para expected_current_date_time
+
+    --Aplicamos la lógica para PROGRAMADA vs INMEDIATA
     IF NEW.request_activity = 'PROGRAMADA' AND NEW.status = 'Completada' THEN
-        calculated_time := NEW.scheduled_time AT TIME ZONE 'UTC' - 
-                        (programada_minutes * interval '1 minute');
+        -- Para actividades PROGRAMADAS, usar la hora programada directamente
+        calculated_time := NEW.scheduled_time AT TIME ZONE 'UTC';
         calculated_time := date_trunc('minute', calculated_time);
         
     ELSIF NEW.request_activity = 'INMEDIATA' AND NEW.status = 'Completada' THEN
-        calculated_time := NEW.date_delivery_time AT TIME ZONE 'UTC' + 
-                        (inmediata_minutes * interval '1 minute');
-        calculated_time := date_trunc('minute', calculated_time);
+        calculated_time := (NEW.date_delivery_time AT TIME ZONE 'UTC' + interval '40 minutes');
+        -- calculated_time := date_trunc('minute', calculated_time);
     ELSE
         calculated_time := NULL;
     END IF;
-    --TODO:: Calcular CUMPLIMIENTO ETL/ETR
-   
 
+    --Calcular CUMPLIMIENTO ETL/ETR
     IF NEW.arrival_time IS NULL OR calculated_time IS NULL THEN
         compliance_result := '';
     ELSE
-        -- Restar el tiempo muerto de llegada a la hora de llegada
-        -- IF (NEW.arrival_time - (NEW.arrival_dead_time || ' minutes')::interval) <= calculated_time THEN
-        --     compliance_result := 'CUMPLE';
-        -- ELSE
-        --     compliance_result := 'NO CUMPLE';
-        -- END IF;
-        arrival_dead_minutes := COALESCE((EXTRACT(HOUR FROM NEW.arrival_dead_time::interval) * 60) + 
-         EXTRACT(MINUTE FROM NEW.arrival_dead_time::interval),0);
-        adjusted_arrival_time := NEW.arrival_time - (arrival_dead_minutes * interval '1 minute'); 
-
-        IF adjusted_arrival_time <= calculated_time THEN
-            compliance_result := 'CUMPLE';
+        -- Para actividades PROGRAMADAS
+        IF NEW.request_activity = 'PROGRAMADA' THEN
+            -- CUMPLE si la llegada es anterior o igual a la hora programada
+            IF NEW.arrival_time AT TIME ZONE 'UTC' <= calculated_time THEN
+                compliance_result := 'CUMPLE';
+            ELSE
+                compliance_result := 'NO CUMPLE';
+            END IF;
+        -- Para actividades INMEDIATAS
         ELSE
-            compliance_result := 'NO CUMPLE';
+             -- CUMPLE si la llegada es anterior o igual a la hora de entrega + 40 minutos
+		    -- IF NEW.arrival_time AT TIME ZONE 'UTC' <= (NEW.date_delivery_time AT TIME ZONE 'UTC' + interval '40 minutes') THEN
+		        IF NEW.arrival_time AT TIME ZONE 'UTC' <= calculated_time THEN
+                compliance_result := 'CUMPLE';
+		    ELSE
+		        compliance_result := 'NO CUMPLE';
+		    END IF;
         END IF;
     END IF;
     
-    --TODO:: Calcular TIEMPO ESPERA CONFIRMACIÓN
+    --Calcular TIEMPO ESPERA CONFIRMACIÓN
     IF NEW.confirmation_time IS NOT NULL AND NEW.final_time IS NOT NULL 
         AND NEW.confirmation_time > NEW.final_time THEN
         confirmation_waiting_interval := NEW.confirmation_time - NEW.final_time;
@@ -91,7 +93,8 @@ BEGIN
     ELSE
         confirmation_waiting_time := 0;
     END IF;
-    ---TODO:: Calcular Tiempo Total
+    
+    --Calcular Tiempo Total
     IF NEW.status <> 'Completada' THEN
         total_time_interval := '0 minutes';
         total_time_minutes := 0;
@@ -117,10 +120,13 @@ BEGIN
         
         -- Calcular los minutos totales
         total_time_minutes := EXTRACT(HOUR FROM total_time_interval) * 60 + 
-                               EXTRACT(MINUTE FROM total_time_interval);
+                              EXTRACT(MINUTE FROM total_time_interval);
     END IF;
 
-  -- TODO::Cálculo de ESI_CATV_TEST
+    -- Convertir el tiempo total a horas para la comparación (línea que estaba comentada)
+    total_time_hours := EXTRACT(EPOCH FROM total_time_interval) / 3600;
+
+    -- Cálculo de ESI_CATV_TEST
     IF NEW.status <> 'Completada' THEN
         esi_catv_test_result := NULL;
     ELSE
@@ -142,7 +148,7 @@ BEGIN
         END IF;
     END IF;
     
-    --- TODO:: CATV_TEST
+    -- CATV_TEST
     IF NEW.status <> 'Completada' THEN
        catv_count := NULL; 
     ELSIF (SELECT COUNT(*) FROM exceptions_cavid WHERE cavid = NEW.cav_id LIMIT 1) > 0 AND 
@@ -156,7 +162,8 @@ BEGIN
             AND status = NEW.status 
             AND attributable = NEW.attributable;
     END IF;
-       -- TODO:: Cálculo de ROOT_CAUSE_ANT
+    
+    -- Cálculo de ROOT_CAUSE_ANT
     IF NEW.cav_id = 'N/A' OR NEW.cav_id ='N/a'
        OR NEW.root_cause = '0' 
        OR NEW.status <> 'Completada' THEN
@@ -175,7 +182,7 @@ BEGIN
         LIMIT 1;
     END IF;
 
--- TODO:: Cálculo de ESI_DATE
+    -- Cálculo de ESI_DATE
     IF NEW.status <> 'Completada' THEN
         esi_date_result := NULL;
     ELSE
@@ -202,7 +209,8 @@ BEGIN
             LIMIT 1;
         END IF;
     END IF;
-    -- TODO:: Cálculo de ESI
+    
+    -- Cálculo de ESI
     IF NEW.status != 'Completada' THEN
         esi_result := NULL;
     ELSE
@@ -234,9 +242,7 @@ BEGIN
         END IF;
     END IF;
     
-    
-  
-    -- TODO::Cálculo de ESI_STAFF
+    -- Cálculo de ESI_STAFF
     IF NEW.status <> 'Completada' THEN
         esi_staff_result := NULL;
     ELSE
@@ -261,8 +267,7 @@ BEGIN
         END IF;
     END IF;
  
-    
-    -- TODO:: Nuevo cálculo para FECHA VR VR_DATE
+    -- TODO:: Cálculo para FECHA VR VR_DATE
     IF NEW.status <> 'Completada' THEN
         vr_date_result := NULL;
     ELSE
@@ -287,7 +292,8 @@ BEGIN
             LIMIT 1;
         END IF;
     END IF;
--- TODO:: para TECNICOS VR - VR_STAFF
+    
+    -- Para TECNICOS VR - VR_STAFF
     IF NEW.status <> 'Completada' THEN
         vr_staff_result := NULL;
     ELSE
@@ -311,6 +317,7 @@ BEGIN
             LIMIT 1;
         END IF;
     END IF;
+    
     -- TODO:: Cálculo para VR
     IF vr_date_result IS NULL OR 
        NEW.resolutioncategory_2ps = 'VISITA FALLIDA' OR 
@@ -337,13 +344,10 @@ BEGIN
             vr_result := '';
         END IF;
     END IF;
-    ---TODO:: TS
-     -- Convertir el tiempo total a horas para la comparación
-    -- total_time_hours := EXTRACT(EPOCH FROM total_time_interval) / 3600;  
-     ---TODO:: TS
+    
+    -- TODO:: TS - Cálculo estado de cumplimiento
     IF NEW.resolutioncategory_2ps IN ('VISITA FALLIDA', 'VISITA CANCELADA') THEN
         ts_status := '';
-	
     ELSE
         -- Check if the operational category is completable for the given status
         SELECT CASE 
@@ -355,13 +359,15 @@ BEGIN
             ) THEN true 
             ELSE false 
         END INTO operational_category_completable;
+        
         IF operational_category_completable AND total_time_minutes >= 0 THEN
             SELECT EXTRACT(EPOCH FROM COALESCE(
-			(SELECT hourr
-			 FROM exceptions_category 
-			 WHERE category_type = NEW.operational_category), 
-			'00:00:00'::time
-			)) / 3600 INTO max_hours_for_category;
+            (SELECT hourr
+             FROM exceptions_category 
+             WHERE category_type = NEW.operational_category), 
+            '00:00:00'::time
+            )) / 3600 INTO max_hours_for_category;
+            
             IF CEIL(total_time_hours * 60) <= CEIL(max_hours_for_category * 60) THEN
                 ts_status := 'CUMPLE';
             ELSE
@@ -370,25 +376,28 @@ BEGIN
         END IF;
     END IF;
 
-    ---TODO:: DIAS RECURRENCIA
+    -- DIAS RECURRENCIA
     IF NEW.arrival_time IS NULL THEN
         days_recurrence := NULL;
     ELSE
         days_recurrence := ROUND(EXTRACT(EPOCH FROM (CURRENT_DATE - NEW.arrival_time)) / (24 * 60 * 60));
     END IF;
-    ---TODO:: MES
+    
+    -- MES
     IF NEW.arrival_time IS NULL THEN
         monthh := NULL;
     ELSE
         monthh := TO_CHAR(NEW.arrival_time, 'MM');
     END IF;
-    ---TODO:: DIA
+    
+    -- DIA
     IF NEW.arrival_time IS NULL THEN
         dayy := NULL;
     ELSE
         dayy := TO_CHAR(NEW.arrival_time, 'DD');
     END IF;
-	  --TODO:: day_week
+    
+    -- day_week
     IF New.scheduled_time IS NULL THEN
         day_week := NULL;
     ELSE
@@ -398,7 +407,8 @@ BEGIN
             day_week := EXTRACT(DOW FROM NEW.date_delivery_time);
         END IF;
     END IF;
--- TODO:: HORA_INT
+    
+    -- HORA_INT
     IF NEW.request_activity = 'PROGRAMADA' THEN
         time_int:= ROUND(((EXTRACT(HOUR FROM NEW.scheduled_time) + 
                        EXTRACT(MINUTE FROM NEW.scheduled_time) / 60) * 2) / 2, 1);
@@ -406,13 +416,15 @@ BEGIN
         time_int:= ROUND(((EXTRACT(HOUR FROM NEW.date_delivery_time) + 
                        EXTRACT(MINUTE FROM NEW.date_delivery_time) / 60) * 2) / 2, 1);
     END IF;
-    --TODO:: Tiempo Muerto
+    
+    -- Tiempo Muerto
     IF NEW.arrival_time IS NOT NULL AND NEW.date_delivery_time IS NOT NULL THEN
         dead_time := CEIL((EXTRACT(EPOCH FROM NEW.arrival_time - NEW.date_delivery_time) / 3600) * 10) / 10;
     ELSE
         dead_time := NULL;
     END IF;
-    -- Todo::Cálculo de one_fifty
+    
+    -- Cálculo de one_fifty
     one_fifty_result := 
         EXTRACT(EPOCH FROM total_time_interval)/60 +
         COALESCE(EXTRACT(EPOCH FROM NEW.arrival_dead_time)/60, 0) +
@@ -425,7 +437,7 @@ BEGIN
         compliance_etl_etr,
         confirmation_waiting_time,
         total_time,
-		day_week,
+        day_week,
         dead_time,
         dayy,
         time_int,
@@ -452,7 +464,7 @@ BEGIN
         compliance_result,
         COALESCE(to_char((confirmation_waiting_minutes * interval '1 second'), 'HH24:MI:SS'), '00:00:00')::time,
         COALESCE(to_char((total_time_minutes || ' minutes')::interval, 'HH24:MI'), '00:00')::time,
-		day_week,
+        day_week,
         dead_time,
         dayy,
         time_int,
@@ -497,13 +509,11 @@ BEGIN
     
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql
-;
+$$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trigger_calculate_estimated_times ON tasks;
 
-CREATE TRIGGER trigger_calculate_estimated_times AFTER
-INSERT
-    OR
-UPDATE ON tasks FOR EACH ROW
-EXECUTE FUNCTION calculate_estimated_times ();
+CREATE TRIGGER trigger_calculate_estimated_times 
+AFTER INSERT OR UPDATE ON tasks 
+FOR EACH ROW
+EXECUTE FUNCTION calculate_estimated_times();
